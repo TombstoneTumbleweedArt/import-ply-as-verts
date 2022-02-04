@@ -1,9 +1,22 @@
 # import-ply-as-verts
 Blender 3.1 PLY importer that correctly loads point clouds (and all PLY models as point clouds)
 
+Until I get the script correctly packaged as an addon, it will be necessary to replace the stock import module with the new one.  See the Install.pdf file for more detail.
+
 The stock PLY importer that ships with Blender was never intended for vertex-colored point clouds (ie, PLY files with zero edges and faces). Most of my fun math graphics are point clouds from Mandelbulb3D, J-Wildfire, and photogrammetry scans gone horribly wrong. Until now, getting these clouds into Blender has involved a great deal of heavy lifting.
 Since 2017 I have been developing a standalone app for this but with the recent functionality added in Blender 3.1 Alpha and newer, I happily abandon my project to throw full energy into the beauty of Geo Nodes.
 
-Until I get the script correctly packaged as an addon, it will be necessary to replace the stock import module with the new one.  See the Install.pdf file for more detail.
+I was able to sleuth out why the importer didn't work.  For the technically minded, the issue was that the Vertex Color Data Block in Blender is intimately tied to Faces.  One cannot exist without the other.  However, the color data was still being read in.  The tricky part was spending many quality hours with bpy.data. <autocomplete> to ultimately find a useful data structure for said color data.  Finally, a Custom Attribute was the answer!  
+  
+And now instead of endlessly coding ON point clouds, we all get to PLAY with point clouds. 
 
-![Node_Setup](https://user-images.githubusercontent.com/24717972/152527292-f0f03ad2-4cb2-4629-9b49-0ffea61bf968.jpg)
+  
+And hast thou slain the Jabberwock?
+Come to my arms, my beamish boy!
+O frabjous day! Callooh! Callay!
+He chortled in his joy.
+
+Lewis Carroll, 'The Jabberwocky'
+
+
+![Node_Setup-02](https://user-images.githubusercontent.com/24717972/152528698-3be48667-570c-4ab4-bbf7-75773cbd3582.jpg)
