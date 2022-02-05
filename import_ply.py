@@ -26,6 +26,15 @@
 # All love and respect to the original programmers who did all the heavy lifting for me :) 
 #
 # ##########
+
+
+# ######### CHANGELOG ######## 
+#
+# v1.01 - "The Brad Patch": Added additional if clause to allow for unorthodox JWF ply files that contain odd
+#           data similar to pscale and intensity
+#           TODO:  Move this fix into the parser module so as to better strip out weird properties
+
+
 '''
 bl_info = {
     "name": "Import PLY as Verts",
@@ -278,6 +287,7 @@ def load_ply_mesh(filepath, ply_name):
     uvindices = colindices = None
     colmultiply = None
     normals = False
+    jwf = False
 
     # Read the file
     for el in obj_spec.specs:
@@ -324,9 +334,17 @@ def load_ply_mesh(filepath, ply_name):
     # [9] = a color
     
     # If len(verts[0]) is greater than 7, we have normals
-    vertinfo = len(verts[0])
-    if vertinfo > 7:
-        normals = True
+    vertlength = len(verts[0])
+    
+    # BRAD PATCH - allow for JWF's len(9) files
+    #
+    # Needs a more elegant solution but this will band-aid for now
+    
+    if vertlength > 7:
+        if vertlength < 10:
+            jwf = True
+        else:
+            normals = True
     
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
@@ -369,6 +387,16 @@ def load_ply_mesh(filepath, ply_name):
                     newcolor.attributes['Col'].data[i].color[1] = (verts[i][7]) / 255.0
                     newcolor.attributes['Col'].data[i].color[2] = (verts[i][8]) / 255.0
                     newcolor.attributes['Col'].data[i].color[3] = (verts[i][9]) / 255.0
+            elif jwf == True:
+                if len(colindices) == 3:
+                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][3]) / 255.0
+                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][4]) / 255.0
+                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][5]) / 255.0
+                else: 
+                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][3]) / 255.0
+                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][4]) / 255.0
+                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][5]) / 255.0
+                    newcolor.attributes['Col'].data[i].color[3] = (verts[i][6]) / 255.0
             
     mesh.update()
     mesh.validate()
