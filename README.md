@@ -1,6 +1,8 @@
 # import-ply-as-verts
 Blender 3.1 PLY importer that correctly loads point clouds (and all PLY models as point clouds)
 
+* Feb 5, 2022 - v1.01 patched to allow for certain J-Wildfire formulas that add extraneous data to the PLY file during export.
+
 Until I get the script correctly packaged as an addon, it will be necessary to replace the stock import module with the new one.  See the Install.pdf file for more detail.
 
 The stock PLY importer that ships with Blender was never intended for vertex-colored point clouds (ie, PLY files with zero edges and faces). Most of my fun math graphics are point clouds from Mandelbulb3D, J-Wildfire, and photogrammetry scans gone horribly wrong. Until now, getting these clouds into Blender has involved a great deal of heavy lifting.
