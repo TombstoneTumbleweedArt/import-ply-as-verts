@@ -27,4 +27,5 @@ Lewis Carroll, 'The Jabberwocky'
   Demo Video: https://youtu.be/-OMV2LrTwVw
 
 
-![Node_Setup-02](https://user-images.githubusercontent.com/24717972/152528698-3be48667-570c-4ab4-bbf7-75773cbd3582.jpg)
+
+![Node_Setup-03](https://user-images.githubusercontent.com/24717972/152687145-69a525ee-cc62-4d4f-a06f-d223800e9d29.jpg)
