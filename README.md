@@ -4,7 +4,7 @@
 <b>Latest News</b>
 
 * Mandelbulb3D - Recommended to use v1.99 for now.  The BTracer2 module in v1.99.32 isn't compatible with the importer yet but it's an easy patch, will be fixed asap.
-* Feb 5, 2022 - v1.01 patched to allow for certain J-Wildfire formulas that add extraneous data to the PLY file during export.
+* Updated .blend files to remove a HDRI I forgot was attached :)  Also have both Cycles and Eevee versions. 
 
 Until I get the script correctly packaged as an addon, it will be necessary to replace the stock import module with the new one.  See the Install.pdf file for more detail.
 
@@ -29,3 +29,7 @@ Lewis Carroll, 'The Jabberwocky'
 
 
 ![Node_Setup-03](https://user-images.githubusercontent.com/24717972/152687145-69a525ee-cc62-4d4f-a06f-d223800e9d29.jpg)
+  
+  <b>Changelog:</b>
+  * Feb 5, 2022 - v1.01 patched to allow for certain J-Wildfire formulas that add extraneous data to the PLY file during export.
+  
