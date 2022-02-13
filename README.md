@@ -3,7 +3,7 @@
 
 <b>Latest News</b>
 
-* Mandelbulb3D - Recommended to use v1.99 for now.  The BTracer2 module in v1.99.32 isn't compatible with the importer yet but it's an easy patch, will be fixed asap.
+* Mandelbulb3D - Tutorial Part 1 now available at https://youtu.be/RLfp7p_a0xI.  Params.txt added to the repo.
 * Updated .blend files to remove a HDRI I forgot was attached :)  Also have both Cycles and Eevee versions. 
 
 Until I get the script correctly packaged as an addon, it will be necessary to replace the stock import module with the new one.  See the Install.pdf file for more detail.
