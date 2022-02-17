@@ -69,12 +69,13 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
     )
 
     # Hide opertator properties, rest of this is managed in C. See WM_operator_properties_filesel().
+    '''
     hide_props_region: BoolProperty(
         name="Hide Operator Properties",
         description="Collapse the region displaying the operator settings",
-        default=True,
+        default=False,
     )
-
+   '''
     directory: StringProperty()
 
     filename_ext = ".ply"
@@ -83,7 +84,7 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
 ### Feb 16 2022 Experiment (cont. at 111)
     use_verts: BoolProperty(
         name="Verts/Colors Only",
-        description="Import PLY model as colored vertex cloud",
+        description="Import PLY model as colored vertex cloud  (No Faces/Edges)",
     )
 ###
 
@@ -117,15 +118,20 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
         sfile = context.space_data
         operator = sfile.active_operator
     
+        layout.label(text="IMPORT PLY AS VERTS?")    
+        layout.prop(operator, "use_verts")
+       # row = layout.row()
+       # row.prop(operator, "use_verts")
        # title: bpy.props.StringProperty(name="Import PLY 2")
-        col = layout.column(heading="Import PLY 2")
-        col.prop(operator, "use_verts")
+        #col = layout.column(heading="Import PLY 2")
+        #col.prop(operator, "use_verts")
 ###        
-        
+
+'''
 class PLY_PT_import_include(bpy.types.Panel):
     bl_space_type = 'FILE_BROWSER'
     bl_region_type = 'TOOL_PROPS'
-    bl_label = "Mesh or Cloud"
+    bl_label = "IMPORT PLY AS VERTS?"
     bl_parent_id = "FILE_PT_operator"
 
     @classmethod
@@ -144,7 +150,7 @@ class PLY_PT_import_include(bpy.types.Panel):
         operator = sfile.active_operator
 
         layout.prop(operator, "use_verts")
-      
+'''   
 
 @orientation_helper(axis_forward='Y', axis_up='Z')
 class ExportPLY(bpy.types.Operator, ExportHelper):
@@ -318,7 +324,7 @@ def menu_func_export(self, context):
 classes = (
     ImportPLY,
     ExportPLY,
-    PLY_PT_import_include,
+ #   PLY_PT_import_include,
     PLY_PT_export_include,
     PLY_PT_export_transform,
     PLY_PT_export_geometry,
