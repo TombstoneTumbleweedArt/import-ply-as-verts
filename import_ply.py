@@ -45,6 +45,9 @@ bl_info = {
     "category": "Import-Export",
 }
 '''
+from pickle import FALSE
+
+
 class ElementSpec:
     __slots__ = (
         "name",
@@ -287,6 +290,7 @@ def read(filepath):
     return obj_spec, obj, texture
 
 def load_ply_verts():
+    print("Inside load_ply_verts()")
     pass
 
 def load_ply_mesh(filepath, ply_name):
@@ -302,7 +306,12 @@ def load_ply_mesh(filepath, ply_name):
     colmultiply = None
     normals = False
     jwf = False
-
+    '''
+    if use_verts:
+        print("Verts-> True")
+    else:
+        print("Verts-> False")
+        '''
     # Read the file
     for el in obj_spec.specs:
         if el.name == b'vertex':
@@ -451,11 +460,11 @@ def load_ply_mesh(filepath, ply_name):
 def load_ply(filepath):
     import time
     import bpy
-    import numpy
+   # import numpy
 
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
-
+ 
     mesh = load_ply_mesh(filepath, ply_name)
     if not mesh:
         return {'CANCELLED'}
