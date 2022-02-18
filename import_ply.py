@@ -188,6 +188,10 @@ def read(filepath):
             return invalid_ply
 
         custom_line_sep = None
+
+        ### Allow for the following patterns:        CRLF (99% of ply files)                  LFCR (BTracer2)
+        #                                                          ASCII   1310                                                 1013
+        #                                                       Python    \r\n                                                   \n\r   
         if signature[3] != ord(b'\n'):
             if signature[3] != ord(b'\r'):
                 print("Unknown line separator")
@@ -197,12 +201,14 @@ def read(filepath):
             else:
                 custom_line_sep = b"\r"
                 
-        # Feb 15, 2022: Added rule for '\n\r' to pacify BTracer2 nonstandard ply         
-        if signature[4] != ord(b'\r'):
-                print("Unknown line separator")
-                return invalid_ply
-        else:
-                custom_line_sep = b"\n\r"
+        # Feb 18 2022 - Updated BTracer2 patch below         
+        if signature[3] == ord(b'\n'):
+            if(custom_line_sep is None):
+                if signature[4] != ord(b'\r'):
+                        print("Unknown line separator")
+                        return invalid_ply
+                else:
+                        custom_line_sep = b"\n\r"
         ########
 
         # Work around binary file reading only accepting "\n" as line separator.
@@ -460,7 +466,7 @@ def load_ply_mesh(filepath, ply_name):
 def load_ply(filepath):
     import time
     import bpy
-   # import numpy
+   
 
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
@@ -473,6 +479,7 @@ def load_ply(filepath):
 
     return {'FINISHED'}
 
+#load_ply(filepath="D:\\KleinCLOUD2.ply")
 
 def load(operator, context, filepath=""):
-    return load_ply(filepath)
+    return load_ply(filepath)    
