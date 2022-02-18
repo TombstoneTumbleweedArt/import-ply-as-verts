@@ -1,35 +1,5 @@
 # import-ply-as-verts
 <strong>Blender 3.1 Alpha (and later) PLY importer that correctly loads point clouds (and all PLY models as point clouds)</strong>
 
-<b>Latest News</b>
-
-* Mandelbulb3D - Tutorial Part 1 now available at https://youtu.be/RLfp7p_a0xI.  Params.txt added to the repo.
-* Updated .blend files to remove a HDRI I forgot was attached :)  Also have both Cycles and Eevee versions. 
-
-Until I get the script correctly packaged as an addon, it will be necessary to replace the stock import module with the new one.  See the Install.pdf file for more detail.
-
-The stock PLY importer that ships with Blender was never intended for vertex-colored point clouds (ie, PLY files with zero edges and faces). Most of my fun math graphics are point clouds from Mandelbulb3D, J-Wildfire, and photogrammetry scans gone horribly wrong. Until now, getting these clouds into Blender has involved a great deal of heavy lifting.
-Since 2017 I have been developing a standalone app for this but with the recent functionality added in Blender 3.1 Alpha and newer, I happily abandon my project to throw full energy into the beauty of Geo Nodes.
-
-I was able to sleuth out why the importer didn't work.  For the technically minded, the issue was that the Vertex Color Data Block in Blender is intimately tied to Faces.  One cannot exist without the other.  However, the color data was still being read in.  The tricky part was spending many quality hours with bpy.data. <autocomplete> to ultimately find a useful data structure for said color data.  Finally, a Custom Attribute was the answer!  
-  
-And now instead of endlessly coding ON point clouds, we all get to PLAY with point clouds. 
-
-  
-And hast thou slain the Jabberwock?
-Come to my arms, my beamish boy!
-O frabjous day! Callooh! Callay!
-He chortled in his joy.
-
-Lewis Carroll, 'The Jabberwocky'
-
-  
-  Demo Video: https://youtu.be/-OMV2LrTwVw
-
-
-
-![Node_Setup-03](https://user-images.githubusercontent.com/24717972/152687145-69a525ee-cc62-4d4f-a06f-d223800e9d29.jpg)
-  
-  <b>Changelog:</b>
-  * Feb 5, 2022 - v1.01 patched to allow for certain J-Wildfire formulas that add extraneous data to the PLY file during export.
-  
+<h3>Experimental Branch</h3>
+A staging area for code in progress. Not recommended for general use.
