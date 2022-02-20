@@ -1,5 +1,7 @@
 # import-ply-as-verts
-<strong>Blender 3.1 Alpha (and later) PLY importer that correctly loads point clouds (and all PLY models as point clouds)</strong>
+<strong>Blender 3.1 Alpha (and later) PLY Importer: Complete drop-in replacement for the stock Blender PLY import module.</strong>
+Correctly loads vertex-colored point clouds and nonstandard PLY files that the original importer wasn't meant for.
+Retains all the functionality of the original codebase.
 
 <h3>Experimental Branch</h3>
-A staging area for code in progress. Not recommended for general use as these are generally broken even on my machine :)
+Final Beta commit, now testing ahead of 2.0 Release :)
