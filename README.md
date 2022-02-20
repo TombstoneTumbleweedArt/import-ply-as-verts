@@ -50,3 +50,22 @@ There is only _one_ Material in this scene.
 ![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154849235-78dd499c-ae07-4720-bf33-9a226f0cdac2.jpg)
 
 The point cloud files have had a simple geometry node tree applied (included in the <i>example_x.blend</i> files)
+
+# Usage:
+
+Once the scripts are replaced, reload Blender.  <i>File->Import</i> will now look like this:
+
+
+![File_Screenshot](https://user-images.githubusercontent.com/24717972/154866087-3e15bcbc-8537-444c-af1d-4d41c4f25a36.jpg)
+
+  
+  Selecting <i>Import PLY as Verts</i> will bring up the Filebrowser as usual, with an additional checkbox:
+  
+![File-02-B-Screenshot](https://user-images.githubusercontent.com/24717972/154866107-dc54801e-07a7-447d-b006-57fdf92db7ad.jpg)
+
+
+Several things may happen at this point:
+  - A triangle/quad mesh file may be loaded as either point cloud (checkbox selected) or mesh (checkbox deselected).
+  - A point cloud file may be loaded with the checkbox selected.
+  - A point cloud file may be loaded with the checkbox deselected, and the autodetect routine will use the correct loading method.
+    - <i>Known Issue:- a bug in the autodetect slows performance as it causes the file to be read twice.  Currently working on a fix.</i>
