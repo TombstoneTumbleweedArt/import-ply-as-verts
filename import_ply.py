@@ -30,21 +30,24 @@
 
 # ######### CHANGELOG ######## 
 #
+# v2.0 - Reintegrated the original importer and added Verts/Colors as load option.  Now correctly loads:
+#
+#                   MB3D BTracer Point Cloud PLY (v1.99 and earlier)
+#					MB3D BTracer2 PLY (v1.99.12 and later)
+#					JWF  Point Cloud (a few edge cases may remain, these will be patched as necessary)
+#					Photogrammetry and other generic PLY containing at least vertex and color information               
+#
 # v1.01 - "The Brad Patch": Added additional if clause to allow for unorthodox JWF ply files that contain odd
 #           data similar to pscale and intensity
-#           TODO:  Move this fix into the parser module so as to better strip out weird properties
+#          
+
+# ######### ISSUES ########
+# 
+#       Feb 20, 2022 - When a user attempts to load a point cloud as a mesh, the autodetect routine causes read() to be called twice.  Working on a fix.
+#            
 
 
-'''
-bl_info = {
-    "name": "Import PLY as Verts",
-    "author": "Michael A Prostka",
-    "blender": (3, 1, 0),
-    "location": "File > Import/Export",
-    "description": "Import PLY mesh data as point cloud",
-    "category": "Import-Export",
-}
-'''
+
 from pickle import FALSE
 
 
@@ -147,7 +150,7 @@ class ObjectSpec:
         }
 
 
-def read(filepath):
+def read(self, filepath):
     import re
 
     format = b''
@@ -189,9 +192,11 @@ def read(filepath):
 
         custom_line_sep = None
 
-        ### Allow for the following patterns:        CRLF (99% of ply files)                  LFCR (BTracer2)
-        #                                                          ASCII   1310                                                 1013
-        #                                                       Python    \r\n                                                   \n\r   
+        ### Allow for the following patterns:        CRLF (MB3D)                     LFCR (BTracer2)                   Binary / ASCII LF only (MeshLab et. al.)
+        #                                                          ASCII   1310                                                 1013                                                10 
+        #                                                       Python    \r\n                                                   \n\r                                                  \n
+        
+        # CRLF
         if signature[3] != ord(b'\n'):
             if signature[3] != ord(b'\r'):
                 print("Unknown line separator")
@@ -201,21 +206,18 @@ def read(filepath):
             else:
                 custom_line_sep = b"\r"
                 
-        # Feb 18 2022 - Updated BTracer2 patch below         
+        # The Others          
         if signature[3] == ord(b'\n'):
             if(custom_line_sep is None):
+                # If no \r (ie LF only) present, force one
                 if signature[4] != ord(b'\r'):
-                        print("Unknown line separator")
-                        return invalid_ply
+                       custom_line_sep = b'\n'
                 else:
-                        custom_line_sep = b"\n\r"
+                        custom_line_sep = b"\n\r"       
         ########
 
         # Work around binary file reading only accepting "\n" as line separator.
 
-        # TODO:     Apply the BTracer2 fix above to this module.  Not a huge priority as binary-encoded
-        #                  \n\r PLY files are rare in the wild.
-            
         plyf_header_line_iterator = lambda plyf: plyf
         if custom_line_sep is not None:
             def _plyf_header_line_iterator(plyf):
@@ -279,6 +281,7 @@ def read(filepath):
                     print("Invalid element line")
                     return invalid_ply
                 obj_spec.specs.append(ElementSpec(tokens[1], int(tokens[2])))
+
             elif tokens[0] == b'property':
                 if not len(obj_spec.specs):
                     print("Property without element")
@@ -293,17 +296,214 @@ def read(filepath):
 
         obj = obj_spec.load(format_specs[format], plyf)
 
+        # If user attempts to load point cloud as mesh, flip the bit
+        #  ISSUE - Feb 20, 2022
+        print (len(obj[b'face']))
+        # Case 1 - Only verts in file
+        if len(obj) < 2:
+            self.use_verts = True
+
+        # Case 2 - 'element face 0' in file (JWF, we see you!)    
+        elif len(obj[b'face']) == 0:
+            self.use_verts = True     
+       
     return obj_spec, obj, texture
 
-def load_ply_verts():
-    print("Inside load_ply_verts()")
-    pass
 
-def load_ply_mesh(filepath, ply_name):
+
+def load_ply_mesh(self, filepath, ply_name):
     import bpy
 
-    obj_spec, obj, texture = read(filepath)
-    # XXX28: use texture
+    obj_spec, obj, texture = read(self, filepath)
+  
+    if obj is None:
+        print("Invalid file")
+        return
+
+    # If attempting to load a point cloud file as mesh, import as verts instead and bail out
+    #  ISSUE - Feb 20, 2022
+    if self.use_verts == True:
+        mesh = load_ply_verts(self, filepath, ply_name)
+    else:
+
+        uvindices = colindices = None
+        colmultiply = None
+
+        # TODO import normals
+        # noindices = None
+
+        for el in obj_spec.specs:
+            if el.name == b'vertex':
+                vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
+                # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
+                # if -1 in noindices: noindices = None
+                uvindices = (el.index(b's'), el.index(b't'))
+                if -1 in uvindices:
+                    uvindices = None
+                # ignore alpha if not present
+                if el.index(b'alpha') == -1:
+                    colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
+                else:
+                    colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
+                if -1 in colindices:
+                    if any(idx > -1 for idx in colindices):
+                        print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
+                    colindices = None
+                else:  # if not a float assume uchar
+                    colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
+
+            elif el.name == b'face':
+                findex = el.index(b'vertex_indices')
+            elif el.name == b'tristrips':
+                trindex = el.index(b'vertex_indices')
+            elif el.name == b'edge':
+                eindex1, eindex2 = el.index(b'vertex1'), el.index(b'vertex2')
+
+        mesh_faces = []
+        mesh_uvs = []
+        mesh_colors = []
+
+        def add_face(vertices, indices, uvindices, colindices):
+            mesh_faces.append(indices)
+            if uvindices:
+                mesh_uvs.extend([(vertices[index][uvindices[0]], vertices[index][uvindices[1]]) for index in indices])
+            if colindices:
+                if len(colindices) == 3:
+                    mesh_colors.extend([
+                        (
+                            vertices[index][colindices[0]] * colmultiply[0],
+                            vertices[index][colindices[1]] * colmultiply[1],
+                            vertices[index][colindices[2]] * colmultiply[2],
+                            1.0,
+                        )
+                        for index in indices
+                    ])
+                elif len(colindices) == 4:
+                    mesh_colors.extend([
+                        (
+                            vertices[index][colindices[0]] * colmultiply[0],
+                            vertices[index][colindices[1]] * colmultiply[1],
+                            vertices[index][colindices[2]] * colmultiply[2],
+                            vertices[index][colindices[3]] * colmultiply[3],
+                        )
+                        for index in indices
+                    ])
+
+        if uvindices or colindices:
+            # If we have Cols or UVs then we need to check the face order.
+            add_face_simple = add_face
+
+            # EVIL EEKADOODLE - face order annoyance.
+            def add_face(vertices, indices, uvindices, colindices):
+                if len(indices) == 4:
+                    if indices[2] == 0 or indices[3] == 0:
+                        indices = indices[2], indices[3], indices[0], indices[1]
+                elif len(indices) == 3:
+                    if indices[2] == 0:
+                        indices = indices[1], indices[2], indices[0]
+
+                add_face_simple(vertices, indices, uvindices, colindices)
+
+        verts = obj[b'vertex']
+
+        if b'face' in obj:
+            for f in obj[b'face']:
+                ind = f[findex]
+                add_face(verts, ind, uvindices, colindices)
+
+        if b'tristrips' in obj:
+            for t in obj[b'tristrips']:
+                ind = t[trindex]
+                len_ind = len(ind)
+                for j in range(len_ind - 2):
+                    add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
+
+        mesh = bpy.data.meshes.new(name=ply_name)
+
+        mesh.vertices.add(len(obj[b'vertex']))
+
+        mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
+
+        if b'edge' in obj:
+            mesh.edges.add(len(obj[b'edge']))
+            mesh.edges.foreach_set("vertices", [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])])
+
+        if mesh_faces:
+            loops_vert_idx = []
+            faces_loop_start = []
+            faces_loop_total = []
+            lidx = 0
+            for f in mesh_faces:
+                nbr_vidx = len(f)
+                loops_vert_idx.extend(f)
+                faces_loop_start.append(lidx)
+                faces_loop_total.append(nbr_vidx)
+                lidx += nbr_vidx
+
+            mesh.loops.add(len(loops_vert_idx))
+            mesh.polygons.add(len(mesh_faces))
+
+            mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+            mesh.polygons.foreach_set("loop_start", faces_loop_start)
+            mesh.polygons.foreach_set("loop_total", faces_loop_total)
+
+            if uvindices:
+                uv_layer = mesh.uv_layers.new()
+                for i, uv in enumerate(uv_layer.data):
+                    uv.uv = mesh_uvs[i]
+
+            if colindices:
+                vcol_lay = mesh.vertex_colors.new()
+
+                for i, col in enumerate(vcol_lay.data):
+                    col.color[0] = mesh_colors[i][0]
+                    col.color[1] = mesh_colors[i][1]
+                    col.color[2] = mesh_colors[i][2]
+                    col.color[3] = mesh_colors[i][3]
+
+        mesh.update()
+        mesh.validate()
+
+        if texture and uvindices:
+            pass
+
+            # MP NOTE - Comment left from original code
+
+            # TODO add support for using texture.
+
+            # import os
+            # import sys
+            # from bpy_extras.image_utils import load_image
+
+            # encoding = sys.getfilesystemencoding()
+            # encoded_texture = texture.decode(encoding=encoding)
+            # name = bpy.path.display_name_from_filepath(texture)
+            # image = load_image(encoded_texture, os.path.dirname(filepath), recursive=True, place_holder=True)
+
+            # if image:
+            #     texture = bpy.data.textures.new(name=name, type='IMAGE')
+            #     texture.image = image
+
+            #     material = bpy.data.materials.new(name=name)
+            #     material.use_shadeless = True
+
+            #     mtex = material.texture_slots.add()
+            #     mtex.texture = texture
+            #     mtex.texture_coords = 'UV'
+            #     mtex.use_map_color_diffuse = True
+
+            #     mesh.materials.append(material)
+            #     for face in mesh.uv_textures[0].data:
+            #         face.image = image
+
+    return mesh
+
+def load_ply_verts(self, filepath, ply_name):
+    import bpy
+
+  #  ISSUE - Feb 20, 2022
+    obj_spec, obj, texture = read(self, filepath)
+  
     if obj is None:
         print("Invalid file")
         return
@@ -312,12 +512,7 @@ def load_ply_mesh(filepath, ply_name):
     colmultiply = None
     normals = False
     jwf = False
-    '''
-    if use_verts:
-        print("Verts-> True")
-    else:
-        print("Verts-> False")
-        '''
+ 
     # Read the file
     for el in obj_spec.specs:
         if el.name == b'vertex':
@@ -337,14 +532,6 @@ def load_ply_mesh(filepath, ply_name):
             else:  # if not a float assume uchar
                 colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
 
-        #elif el.name == b'face':
-            #findex = el.index(b'vertex_indices')
-        #elif el.name == b'tristrips':
-          #  trindex = el.index(b'vertex_indices')
-        #elif el.name == b'edge':
-            #eindex1, eindex2 = el.index(b'vertex1'), el.index(b'vertex2')
-
-    #mesh_faces = []
     mesh_uvs = []
     mesh_colors = []
     
@@ -366,8 +553,7 @@ def load_ply_mesh(filepath, ply_name):
     vertlength = len(verts[0])
     
     # BRAD PATCH - allow for JWF's len(9) files
-    #
-    # Needs a more elegant solution but this will band-aid for now
+    #   Needs a more elegant solution but this will band-aid for now
     
     if vertlength > 7:
         if vertlength < 10:
@@ -388,10 +574,10 @@ def load_ply_mesh(filepath, ply_name):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
   
-    # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
     
+    # COLOR
     if colindices: 
-        # Create new Attribute 'Col' to hold the color data
+        # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
         bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
         newcolor = bpy.context.active_object.data
         # If there are no normals, the color data will start at [3], otherwise [6]
@@ -433,45 +619,36 @@ def load_ply_mesh(filepath, ply_name):
     # Left from stock importer
     if texture and uvindices:
         pass
-        # TODO add support for using texture.
-
-        # import os
-        # import sys
-        # from bpy_extras.image_utils import load_image
-
-        # encoding = sys.getfilesystemencoding()
-        # encoded_texture = texture.decode(encoding=encoding)
-        # name = bpy.path.display_name_from_filepath(texture)
-        # image = load_image(encoded_texture, os.path.dirname(filepath), recursive=True, place_holder=True)
-
-        # if image:
-        #     texture = bpy.data.textures.new(name=name, type='IMAGE')
-        #     texture.image = image
-
-        #     material = bpy.data.materials.new(name=name)
-        #     material.use_shadeless = True
-
-        #     mtex = material.texture_slots.add()
-        #     mtex.texture = texture
-        #     mtex.texture_coords = 'UV'
-        #     mtex.use_map_color_diffuse = True
-
-        #     mesh.materials.append(material)
-        #     for face in mesh.uv_textures[0].data:
-        #         face.image = image
 
     return mesh
 
-
-def load_ply(filepath):
+def load_ply(self, filepath):
     import time
     import bpy
-   
-
+  
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
  
-    mesh = load_ply_mesh(filepath, ply_name)
+    # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal
+    print(self.use_verts)
+    
+    if self.use_verts:
+        mesh = load_ply_verts(self, filepath, ply_name)
+    else:
+        mesh = load_ply_mesh(self,filepath, ply_name)
+        
+        # If a good ole' edge/face mesh is returned, create a Blender object.
+        # (if an autodetected cloud comes back it will already have this done to it in load_ply_verts)
+       
+        if self.use_verts == False:
+            for ob in bpy.context.selected_objects:
+                ob.select_set(False)
+
+            obj = bpy.data.objects.new(ply_name, mesh)
+            bpy.context.collection.objects.link(obj)
+            bpy.context.view_layer.objects.active = obj
+            obj.select_set(True)
+
     if not mesh:
         return {'CANCELLED'}
 
@@ -479,7 +656,6 @@ def load_ply(filepath):
 
     return {'FINISHED'}
 
-#load_ply(filepath="D:\\KleinCLOUD2.ply")
 
 def load(operator, context, filepath=""):
-    return load_ply(filepath)    
+    return load_ply(operator, filepath)    

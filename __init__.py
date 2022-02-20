@@ -19,17 +19,16 @@
 # <pep8-80 compliant>
 
 bl_info = {
-    "name": "Stanford PLY format",
-    "author": "Bruce Merry, Campbell Barton, Bastien Montagne, Mikhail Rachinsky",
-    "version": (2, 2, 0),
+    "name": "Import PLY as Verts",
+    "author": "Michael A. Prostka (based on Merry, Barton, Montagne, and Rachinsky",
+    "version": (2, 0, 0),
     "blender": (3, 0, 0),
     "location": "File > Import/Export",
-    "description": "Import-Export PLY mesh data with UVs and vertex colors",
-    "doc_url": "{BLENDER_MANUAL_URL}/addons/import_export/mesh_ply.html",
-    "support": 'OFFICIAL',
+    "description": "Import-Export PLY data (as Mesh or Cloud) with UVs and vertex colors",
     "category": "Import-Export",
 }
 
+### ORIGINAL COPYRIGHT
 # Copyright (C) 2004, 2005: Bruce Merry, bmerry@cs.uct.ac.za
 # Contributors: Bruce Merry, Campbell Barton
 
@@ -59,7 +58,7 @@ from bpy_extras.io_utils import (
 class ImportPLY(bpy.types.Operator, ImportHelper):
     """Load a PLY geometry file"""
     bl_idname = "import_mesh.ply"
-    bl_label = "Import PLY"
+    bl_label = "Import PLY as Verts"
     bl_options = {'UNDO'}
 
     files: CollectionProperty(
@@ -68,25 +67,17 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
         type=bpy.types.OperatorFileListElement,
     )
 
-    # Hide opertator properties, rest of this is managed in C. See WM_operator_properties_filesel().
-    '''
-    hide_props_region: BoolProperty(
-        name="Hide Operator Properties",
-        description="Collapse the region displaying the operator settings",
-        default=False,
-    )
-   '''
     directory: StringProperty()
 
     filename_ext = ".ply"
     filter_glob: StringProperty(default="*.ply", options={'HIDDEN'})
 
-### Feb 16 2022 Experiment (cont. at 111)
+    ### use_verts checkbox
     use_verts: BoolProperty(
         name="Verts/Colors Only",
         description="Import PLY model as colored vertex cloud  (No Faces/Edges)",
     )
-###
+
 
     def execute(self, context):
         import os
@@ -113,18 +104,14 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
-### Feb 16 cont.
+### Draw our checkbox
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
 
         sfile = context.space_data
-      # operator = sfile.active_operator
-    
-        layout.label(text="IMPORT PLY AS VERTS?")    
-       # layout.prop(operator, "use_verts")
-     
+        layout.label(text="IMPORT PLY AS VERTS?")        
 ###        
 
 
@@ -314,11 +301,11 @@ class PLY_PT_export_geometry(bpy.types.Panel):
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportPLY.bl_idname, text="Stanford (.ply)")
+    self.layout.operator(ImportPLY.bl_idname, text="Stanford PLY as Verts")
 
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportPLY.bl_idname, text="Stanford (.ply)")
+    self.layout.operator(ExportPLY.bl_idname, text="Stanford PLY as Verts")
 
 
 classes = (
