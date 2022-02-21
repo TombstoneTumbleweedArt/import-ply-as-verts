@@ -41,14 +41,13 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 
 
 <i>(Left to Right)</i>
-  - Blender Export, Mesh and Cloud;  BTracer2, Mesh and Cloud;  J-Wildfire Cloud; Photogrammetry Cloud
+  - Vertex-Painted Suzanne <i>(Same file as Mesh and Verts)</i>;  BTracer2 <i>(Same file as Mesh and Verts)</i>;  J-Wildfire Point Cloud; Photogrammetry Point Cloud
 
-There is only _one_ Material in this scene.
+![The_Gang](https://user-images.githubusercontent.com/24717972/154947983-be7a2e52-a9f8-4114-b887-8933970f96c7.jpg)
 
-![The_Gang](https://user-images.githubusercontent.com/24717972/154849262-121f25f7-241f-4c16-b1e3-2b3ea0c77e65.jpg)
+![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154948015-238c3d0d-43e4-4b63-a316-4f4470ce172d.jpg)
 
-![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154849235-78dd499c-ae07-4720-bf33-9a226f0cdac2.jpg)
-
+All the objects in this share a single Material that uses the correctly imported vertex colors.
 The point cloud files have had a simple geometry node tree applied (included in the <i>example_x.blend</i> files)
 
 # Usage
