@@ -298,7 +298,6 @@ def read(self, filepath):
 
         # If user attempts to load point cloud as mesh, flip the bit
         #  ISSUE - Feb 20, 2022
-        print (len(obj[b'face']))
         # Case 1 - Only verts in file
         if len(obj) < 2:
             self.use_verts = True

@@ -32,6 +32,22 @@ bl_info = {
 # Copyright (C) 2004, 2005: Bruce Merry, bmerry@cs.uct.ac.za
 # Contributors: Bruce Merry, Campbell Barton
 
+
+### ORIGINAL bl_info BLOCK
+'''
+bl_info = {
+    "name": "Stanford PLY format",
+    "author": "Bruce Merry, Campbell Barton", "Bastien Montagne"
+    "version": (2, 1, 0),
+    "blender": (2, 90, 0),
+    "location": "File > Import/Export",
+    "description": "Import-Export PLY mesh data with UVs and vertex colors",
+    "doc_url": "{BLENDER_MANUAL_URL}/addons/import_export/mesh_ply.html",
+    "support": 'OFFICIAL',
+    "category": "Import-Export",
+}
+'''
+
 if "bpy" in locals():
     import importlib
     if "export_ply" in locals():
@@ -66,17 +82,16 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
         description="File path used for importing the PLY file",
         type=bpy.types.OperatorFileListElement,
     )
+ ### use_verts checkbox
+    use_verts: BoolProperty(
+        name="Verts/Colors Only",
+        description="Import PLY model as colored vertex cloud  (No Faces/Edges)",
+    )
 
     directory: StringProperty()
 
     filename_ext = ".ply"
     filter_glob: StringProperty(default="*.ply", options={'HIDDEN'})
-
-    ### use_verts checkbox
-    use_verts: BoolProperty(
-        name="Verts/Colors Only",
-        description="Import PLY model as colored vertex cloud  (No Faces/Edges)",
-    )
 
 
     def execute(self, context):
