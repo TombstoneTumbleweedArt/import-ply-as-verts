@@ -48,7 +48,7 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 ![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154948015-238c3d0d-43e4-4b63-a316-4f4470ce172d.jpg)
 
 All the objects in this share a single Material that uses the correctly imported vertex colors.
-The point cloud files have had a simple geometry node tree applied (included in the <i>example_x.blend</i> files)
+The point cloud files have had a simple geometry node tree applied (included in the <i>Example.blend</i> file).
 
 # Install
 
