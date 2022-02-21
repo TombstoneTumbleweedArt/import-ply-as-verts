@@ -9,7 +9,7 @@
 <strong>Experimental Branch:-</strong>   Final Beta commit, now testing ahead of 2.0 Release :)
 
 
-# Why:
+# Why
 
 - Attempting to import any of the below PLY files with the stock importer will fail:
   
@@ -37,7 +37,7 @@ Which has proven _most_ frustrating for several years now.
 
 The combined result is a completely new workflow for the point cloud enthusiast.
 
-# Result:
+# Result
 
 
 <i>(Left to Right)</i>
@@ -51,7 +51,7 @@ There is only _one_ Material in this scene.
 
 The point cloud files have had a simple geometry node tree applied (included in the <i>example_x.blend</i> files)
 
-# Usage:
+# Usage
 
 Once the scripts are replaced, reload Blender.  <i>File->Import</i> will now look like this:
 
@@ -69,3 +69,50 @@ Several things may happen at this point:
   - A point cloud file may be loaded with the checkbox selected.
   - A point cloud file may be loaded with the checkbox deselected, and the autodetect routine will use the correct loading method.
     - <i>Known Issue:- a bug in the autodetect slows performance as it causes the file to be read twice.  Currently working on a fix.</i>
+
+
+# Known Issues
+
+   - The autodetect bug mentioned above.
+   - The checkbox occasionally remains checked despite being False under the hood.  This is under investigation. 
+
+# Python API
+  
+  The API call has a new optional Boolean parameter, `use_verts` (default=False):
+  
+   `bpy.ops.import_mesh.ply(filepath="", files=[], use_verts=False, directory="", filter_glob="*.ply")`
+   
+  and is used similar to
+      
+   `Dave = bpy.ops.import_mesh.ply(filepath="C:\\mb3d_mesh.ply", use_verts=True)`  
+   
+   <strong>Backward Compatibility</strong>
+   
+   A call like 
+    ` Dave = bpy.ops.import_mesh.ply(filepath="C:\\mb3d_mesh.ply")` 
+   is equivalent to using the stock importer and <i>shouldn't</i> break existing scripts.
+    
+    
+    
+# Proposed API Docs
+
+   `bpy.ops.import_mesh.ply(<i>filepath='', files=None, use_verts=False, directory='', filter_glob='*.ply'</i>)`
+   
+   Load a PLY geometry file as verts or mesh
+    
+      Parameters: filepath (string, (optional, never None)) – File Path, Filepath used for importing the file
+                  files (bpy_prop_collection of OperatorFileListElement, (optional)) – File Path, File path used for importing the PLY file
+                  use_verts (boolean, (optional)) - Load as verts or triangle/quad mesh
+                  hide_props_region (boolean, (optional)) – Hide Operator Properties, Collapse the region displaying the operator settings
+                  directory (string, (optional, never None)) – directory
+                  filter_glob (string, (optional, never None)) – filter_glob
+
+      File: addons/io_mesh_ply/__init__.py:81
+
+
+# Roadmap
+
+   - Performance can likely be improved.  I haven't looked too deeply into the read() module which is a common bottleneck in file i/o.
+   - Exporting Blender objects as verts is not yet supported.  Not a huge priority but will be addressed.
+   - Various refactoring.
+    
