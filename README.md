@@ -50,6 +50,24 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 All the objects in this share a single Material that uses the correctly imported vertex colors.
 The point cloud files have had a simple geometry node tree applied (included in the <i>example_x.blend</i> files)
 
+# Install
+
+  The `__init.py__` and `import_ply.py` files from the repo replace the stock importer files.
+  
+  1. Open Blender's location on your computer.  On Windows this is generally 'C:\Program Files\Blender Foundation\'
+  2. If multiple version numbers are present, open the folder of the version you want to upgrade (for our example here, 'Blender 3.1')
+  3. Open the '3.1' folder 
+  4. Open the 'scripts' folder
+  5. Open the 'addons' folder
+  6. Open the 'io_mesh_ply' folder
+  7. Rename '__init__.py' to something like '__init__-OLD.py'
+  8. Remame 'import_ply.py' to 'import_ply-OLD.py'
+  9. Paste in the new __init__.py and import_ply.py from the repository.
+   
+ This will need to be done for each version of Blender you would like to use the script with.  However, it only needs to be done once.  
+ If you want to revert to the original script, reverse steps 7 and 8.
+    
+
 # Usage
 
 Once the scripts are replaced, reload Blender.  <i>File->Import</i> will now look like this:
@@ -97,7 +115,7 @@ Several things may happen at this point:
 
    `bpy.ops.import_mesh.ply(<i>filepath='', files=None, use_verts=False, directory='', filter_glob='*.ply'</i>)`
    
-   Load a PLY geometry file as verts or mesh
+  > Load a PLY geometry file as verts or mesh
     
       Parameters: filepath (string, (optional, never None)) – File Path, Filepath used for importing the file
                   files (bpy_prop_collection of OperatorFileListElement, (optional)) – File Path, File path used for importing the PLY file
@@ -105,8 +123,8 @@ Several things may happen at this point:
                   hide_props_region (boolean, (optional)) – Hide Operator Properties, Collapse the region displaying the operator settings
                   directory (string, (optional, never None)) – directory
                   filter_glob (string, (optional, never None)) – filter_glob
-
-      File: addons/io_mesh_ply/__init__.py:81
+  
+  >   File: addons/io_mesh_ply/__init__.py:81
 
 
 # Roadmap
