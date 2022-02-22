@@ -6,7 +6,7 @@
   <li>Retains the functionality of the original codebase.</li>
 </ul>
 
-<strong>Experimental Branch:-</strong>   Final Beta commit, now testing ahead of 2.0 Release :)
+
 
 
 # Why
