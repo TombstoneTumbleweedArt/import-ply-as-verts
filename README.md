@@ -47,12 +47,11 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 
 ![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154948015-238c3d0d-43e4-4b63-a316-4f4470ce172d.jpg)
 
-All the objects in this share a single Material that uses the correctly imported vertex colors.
-The point cloud files have had a simple geometry node tree applied (included in the <i>Example.blend</i> file).
+All the objects in this scene share a single Material of correctly imported vertex colors. The point clouds have a simple Geometry Node tree applied . <i>(Material and Nodetree included in the </i>Example.blend<i> file).</i>
 
 # Install
 
-  The `__init__.py` and `import_ply.py` files from the repo replace the stock importer files.
+  Since these are Scripts and not an Addon, the `__init__.py` and `import_ply.py` files from the repo will need to be manually pasted alongside the stock importer files.
   
   1. Open Blender's location on your computer.  On Windows this is generally <i>'C:\Program Files\Blender Foundation\'</i>
   2. If multiple version numbers are present, open the folder of the version you want to upgrade (for our example here, <i>'Blender 3.1'</i>)
@@ -65,9 +64,9 @@ The point cloud files have had a simple geometry node tree applied (included in 
   9. Paste in the new `__init__.py` and `import_ply.py` from the repository
   10. Restart Blender
    
- This will need to be done for each version of Blender you would like to use the script with.  However, it only needs to be done once.  
- If you want to revert to the original script, reverse steps 7 and 8.
+ This will need to be done once for each version of Blender you would like to use the script with. If you want to revert to the original script, reverse steps 7 and 8.
     
+ The install procedure is also contained in `Install-2.pdf`.   
 
 # Usage
 
@@ -77,10 +76,10 @@ Once the scripts are replaced, <i>File->Import</i> will now look like this:
 ![File_Screenshot](https://user-images.githubusercontent.com/24717972/154866087-3e15bcbc-8537-444c-af1d-4d41c4f25a36.jpg)
 
   
-  Selecting <i>Import PLY as Verts</i> will bring up the Filebrowser as usual, with an additional checkbox:
+  Selecting <i>Stanford PLY as Verts</i> will bring up the Filebrowser as usual, with an additional checkbox:
   
-![File-02-B-Screenshot](https://user-images.githubusercontent.com/24717972/154866107-dc54801e-07a7-447d-b006-57fdf92db7ad.jpg)
 
+![File-04-Screenshot](https://user-images.githubusercontent.com/24717972/155117073-40b5fb08-35a9-4ca9-8b42-32438515e98c.jpg)
 
 Several things may happen at this point:
   - A triangle/quad mesh file may be loaded as either point cloud (checkbox selected) or mesh (checkbox deselected).
