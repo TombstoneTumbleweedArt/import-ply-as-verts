@@ -66,7 +66,7 @@ All the objects in this scene share a single Material of correctly imported vert
    
  This will need to be done once for each version of Blender you would like to use the script with. If you want to revert to the original script, reverse steps 7 and 8.
     
- The install procedure is also contained in `Install-2.pdf`.   
+ The install procedure is also contained in `Install-v2.pdf`.   
 
 # Usage
 
