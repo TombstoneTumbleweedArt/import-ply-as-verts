@@ -69,7 +69,7 @@ All the objects in this scene share a single Material of correctly imported vert
    
  This will need to be done once for each version of Blender you would like to use the script with. If you want to revert to the original script, reverse steps 7 and 8.
     
- The install procedure is also contained in `Install-v2.pdf`.   
+ The install procedure is also contained in `Install-v2.pdf` and <a href='https://youtu.be/UvC1IPhKNZU'>YouTube</a>.   
 
 # Usage
 
@@ -137,7 +137,14 @@ Several things may happen at this point:
    - Various refactoring.
     
 # Tutorials
-  <i>Under construction</i>
+  
+  1. <a href='https://youtu.be/UvC1IPhKNZU'>How to Install v2.0</a>
+  2. <i>Mandelbulb3D - BTracer2 Workflow Basic</i>
+  3. <i>Mandelbulb3D - BTracer2 Workflow Advanced</i>
+  4. <i>J-Wildfire</i>
+  5. <i>Photogrammetry Rescue with MeshLab and VisualSFM</i>
+  6. <i>...</i>
+ 
 
 # Blog and References
   <i>Under construction</i>
