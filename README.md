@@ -1,4 +1,4 @@
-# import-ply-as-verts v2.0 &nbsp; &nbsp; &nbsp; [![Generic badge](https://img.shields.io/badge/Release-2.0-<COLOR>.svg)](https://shields.io/) &nbsp; &nbsp; &nbsp; &nbsp; ![Logo_Blender-Dark](https://user-images.githubusercontent.com/24717972/154959144-bd55fdc0-2ab9-43e4-8747-33c7465a9c8f.svg)    
+# import-ply-as-verts v2.0 &nbsp; &nbsp; &nbsp; &nbsp; [![Generic badge](https://img.shields.io/badge/Release-2.0-<COLOR>.svg)](https://shields.io/) &nbsp; &nbsp; &nbsp; &nbsp; ![Logo_Blender-Dark](https://user-images.githubusercontent.com/24717972/154959144-bd55fdc0-2ab9-43e4-8747-33c7465a9c8f.svg)    
 ## Blender 3.1 Alpha (and later) New PLY Importer
 <ul>
   <li>Complete drop-in replacement for the stock Blender PLY import module.</li>
