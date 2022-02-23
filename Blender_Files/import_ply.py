@@ -551,14 +551,19 @@ def load_ply_verts(self, filepath, ply_name):
     # If len(verts[0]) is greater than 7, we have normals
     vertlength = len(verts[0])
     
-    # BRAD PATCH - allow for JWF's len(9) files
-    #   Needs a more elegant solution but this will band-aid for now
     
+    # BRAD PATCH v2.0: JWF occasionally spits out len(9) files but so does BTracer2, albeit for different reasons.  This creates an index clash here as we need both
+    #                                   unique solutions for len(9)
+ 
+   # Fix:             If verts[3] is a float, normals = true
+   #                     by implication, anything other is a JWF  
+
     if vertlength > 7:
-        if vertlength < 10:
-            jwf = True
-        else:
-            normals = True
+        if vertlength < 10: 
+            if isinstance(verts[0][3], float):
+                normals = True
+            else:
+                jwf = True
     
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
