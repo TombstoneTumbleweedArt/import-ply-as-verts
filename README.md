@@ -41,8 +41,11 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 # Result
 
 
-> <i>(Left to Right)</i>
-> <strong>Vertex-Painted Suzanne</strong> <i>(Same file as Mesh and Verts)</i>; <strong>BTracer2</strong> <i>(Same file as Mesh and Verts)</i>;  <strong>J-Wildfire Point Cloud</strong>; <strong>Photogrammetry Point Cloud</strong>
+> <i>(Left to Right, Back Row First)</i>
+>   - <strong>Vertex-Painted Suzanne</strong> <i>(Same file as Mesh and Verts)</i>; 
+>   - <strong>BTracer2</strong> <i>(Same file as Mesh and Verts)</i>;  
+>   - <strong>J-Wildfire Point Cloud</strong>; 
+>   - <strong>Photogrammetry Point Cloud</strong>
 
 ![The_Gang](https://user-images.githubusercontent.com/24717972/154947983-be7a2e52-a9f8-4114-b887-8933970f96c7.jpg)
 
