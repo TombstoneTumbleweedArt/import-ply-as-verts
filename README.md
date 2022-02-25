@@ -139,7 +139,7 @@ Several things may happen at this point:
 # Tutorials
   
   1. <a href='https://youtu.be/UvC1IPhKNZU'>How to Install v2.0</a>
-  2. <i>Mandelbulb3D - BTracer2 Workflow Basic</i>
+  2. <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>
   3. <i>Mandelbulb3D - BTracer2 Workflow Advanced</i>
   4. <i>J-Wildfire</i>
   5. <i>Photogrammetry Rescue with MeshLab and VisualSFM</i>
