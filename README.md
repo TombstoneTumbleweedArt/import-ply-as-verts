@@ -12,7 +12,7 @@
 
 # Why
 
-- Attempting to import any of the below PLY files with the stock importer will fail:
+- Attempting to import <i><strong>any</strong></i> of the below PLY files with the stock importer will fail:
   
    - Triangle/Quad Meshes with nonstandard file terminators <i>(BTracer2 PLY export)</i>
    
