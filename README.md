@@ -1,7 +1,7 @@
 # import-ply-as-verts v2.0 &nbsp; &nbsp; &nbsp; &nbsp; [![Generic badge](https://img.shields.io/badge/Release-2.0-<COLOR>.svg)](https://shields.io/) &nbsp; &nbsp; &nbsp; &nbsp; ![Logo_Blender-Dark](https://user-images.githubusercontent.com/24717972/154959144-bd55fdc0-2ab9-43e4-8747-33c7465a9c8f.svg)    
 ## Blender 3.0 * / 3.1 Alpha (and later) New PLY Importer
 <ul>
-  <li> * Vertex colored mesh only in 3.0 (illustration below).
+  <li> * Vertex colored mesh only in 3.0 (see <strong>Compatibility</strong>).
   <li>Complete drop-in replacement for the stock Blender PLY import module.</li>
   <li>Correctly loads vertex-colored point clouds and nonstandard PLY files that the original importer wasn't intended for.</li>
   <li>Retains the functionality of the original codebase.</li>
@@ -52,6 +52,16 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 ![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154948015-238c3d0d-43e4-4b63-a316-4f4470ce172d.jpg)
 
 All the objects in this scene share a single Material of correctly imported vertex colors. The point clouds have a simple Geometry Node tree applied . <i>(Material and Nodetree included in the </i>Example.blend<i> file).</i>
+
+# Compatibility
+
+  - Mesh Import is verified for 3.0 (thanks to Carisma Alex for asking!) and works exactly like the process in <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>.  However, the Point Cloud object requires new functionality added in Blender 3.1 to correctly assign the colors.  Direct import results in a charcoal briquette with missing surface normals.  A workaround is to create the Point Cloud in 3.1 (with applied Geo Node Modifier), save as a .blend file or export to a modern format like .gltf, and open in 3.0.  "Shade Smooth" appears to work incorrectly when doing so.
+
+
+       ![Compatibility-sm](https://user-images.githubusercontent.com/24717972/155842926-f474fc6e-603a-4fa0-a1de-553f35df85ca.jpg)
+         
+
+
 
 # Install
 
