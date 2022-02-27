@@ -55,7 +55,7 @@ All the objects in this scene share a single Material of correctly imported vert
 
 # Compatibility
 
-  - Mesh Import is verified for 3.0 (thanks to <strong>Carisma Alex</strong> for asking!) and works exactly like the process in <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>.  However, the Point Cloud object requires new functionality added in Blender 3.1 to correctly assign the colors.  Direct import results in a charcoal briquette with missing surface normals.  A workaround is to create the Point Cloud in 3.1 (with applied Geo Node Modifier), save as a .blend file or export to a modern format like .gltf, and open in 3.0.  "Shade Smooth" appears to work incorrectly when doing so.
+  - Mesh Import is verified for 3.0 (thanks to <strong>Carisma Alex</strong> for asking!) and works exactly like the process in <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>.  However, the Point Cloud object requires new functionality added in Blender 3.1 to correctly assign the colors.  Direct import results in a charcoal briquette with missing surface normals.  A workaround is to create the Point Cloud in 3.1 (with applied Geo Node Modifier), save as a .blend file or export to a modern format like .gltf, and open in 3.0.  A call to (Edit Mode) Mesh->Normals->Recalculate Outside is usually necessary.
 
 
        ![Compatibility-sm](https://user-images.githubusercontent.com/24717972/155842926-f474fc6e-603a-4fa0-a1de-553f35df85ca.jpg)
