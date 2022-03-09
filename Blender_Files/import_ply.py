@@ -559,7 +559,8 @@ def load_ply_verts(self, filepath, ply_name):
    #                     by implication, anything other is a JWF  
 
     if vertlength > 7:
-        if vertlength < 10: 
+        # Bug Fix, 9 Mar 2022, changed <10 to <=10
+        if vertlength <= 10: 
             if isinstance(verts[0][3], float):
                 normals = True
             else:
