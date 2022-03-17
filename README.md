@@ -53,6 +53,11 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 
 All the objects in this scene share a single Material of correctly imported vertex colors. The point clouds have a simple Geometry Node tree applied . <i>(Material and Nodetree included in the </i>Example.blend<i> file).</i>
 
+# Cycles Point Cloud Render
+The brand new Point Cloud Render mode in Cycles works beautifully well with these (thank you to <strong>Bone Studio</strong> and <strong>Daniel Leike</strong>).  A tutorial is available on <a href="https://www.youtube.com/watch?v=K5xH4T_qcec&t=1s">YouTube</a>, and our image was included in the <a href="https://wiki.blender.org/wiki/Reference/Release_Notes/3.1/Cycles">Blender 3.1 Release Notes - Cycles</a>
+
+![31-Notes](https://user-images.githubusercontent.com/24717972/158804408-633a6bcf-fe94-416a-8e21-751b29687b2f.png)
+
 # Compatibility
 
   - Mesh Import is verified for 3.0 (thanks to <strong>Carisma Alex</strong> for asking!) and works exactly like the process in <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>.  However, the Point Cloud object requires new functionality added in Blender 3.1 to correctly assign the colors.  Direct import results in a charcoal briquette with missing surface normals.  A workaround is to create the Point Cloud in 3.1 (with applied Geo Node Modifier), save as a .blend file or export to a modern format like .gltf, and open in 3.0.  A call to (Edit Mode) Mesh->Normals->Recalculate Outside is usually necessary.
@@ -78,7 +83,7 @@ All the objects in this scene share a single Material of correctly imported vert
   9. Paste in the new `__init__.py` and `import_ply.py` from the repository
   10. Restart Blender
    
- This will need to be done once for each version of Blender you would like to use the script with. If you want to revert to the original script, reverse steps 7 and 8.
+ <strong>This will need to be done once for each version of Blender you would like to use the script with</strong>. If you want to revert to the original script, reverse steps 7 and 8.
     
  The install procedure is also contained in `Install-v2.pdf` and <a href='https://youtu.be/UvC1IPhKNZU'>How to Install v2.0</a>.   
 
@@ -104,8 +109,13 @@ Several things may happen at this point:
 
 # Known Issues
 
+   - PERFORMANCE: The new functionality comes at the cost of speed.  I'm currently moving the heavy file i/o operations (and anything else the profiler exposes) into C++.
+   -  ![Stats](https://user-images.githubusercontent.com/24717972/158803225-8be1cdfe-7c63-4adb-89e0-19dbe22d34f8.jpg)
+
    - The autodetect bug mentioned above.
    - The checkbox occasionally remains checked despite being False under the hood.  This is under investigation. 
+   
+
 
 # Python API
   
