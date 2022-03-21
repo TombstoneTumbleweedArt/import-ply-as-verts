@@ -164,7 +164,9 @@ Several things may happen at this point:
   3. <i>Mandelbulb3D - BTracer2 Workflow Advanced</i>
   4. <i>J-Wildfire</i>
   5. <i>Photogrammetry Rescue with MeshLab and VisualSFM</i>
-  6. <i>...</i>
+  6. <a href="https://youtu.be/K5xH4T_qcec">Cycles 3.1 Point Cloud Render</a>
+  7. <a href="https://youtu.be/6iqVv8Xii-w">World Blender Meetup Day 2022 Presentation</a>
+  8. <i>...</i>
  
 
 # Blog and References
