@@ -315,16 +315,8 @@ def read(self, filepath):
         elif (obj_spec.specs[1].count == 0):
             self.use_verts = True     
 
-
-# 28 March 2022
-#       At this point the header has been parsed (or return invalid_ply)
-#       Note the file position pointer is already set at start of data
-
         obj = obj_spec.load(format_specs[format], plyf)
 
-# Optimize Attempt 1:  If we have arrived here the file is good.  Commit to loading the entire thing into a buffer and then change the reference
-#                                       of 'plyf' and 'stream' to point to the buffer
- 
     return obj_spec, obj, texture
 
 
@@ -339,7 +331,6 @@ def load_ply_mesh(self, filepath, ply_name):
         return
 
     # If attempting to load a point cloud file as mesh, import as verts instead and bail out
-    #  ISSUE - Feb 20, 2022
     if self.use_verts == True:
         mesh = load_ply_verts(self, filepath, ply_name)
     else:
@@ -347,6 +338,7 @@ def load_ply_mesh(self, filepath, ply_name):
         uvindices = colindices = None
         colmultiply = None
 
+        # MP Comment - below comments are left from stock importer
         # TODO import normals
         # noindices = None
 
@@ -519,8 +511,6 @@ def load_ply_mesh(self, filepath, ply_name):
 def load_ply_verts(self, filepath, ply_name):
     import bpy
 
-  #  ISSUE - Feb 20, 2022
-  #  if self.use_verts == False:
     obj_spec, obj, texture = read(self, filepath)
   
     if obj is None:
@@ -553,33 +543,8 @@ def load_ply_verts(self, filepath, ply_name):
 
     mesh_uvs = []
     mesh_colors = []
-    
     verts = obj[b'vertex']
-    
-    ################## ITS ALL IN THE verts OBJECT 
-    # [0] = x pos
-    # [1] = y pos
-    # [2] = z pos
-    # [3] = x norm      * If present
-    # [4] = y norm
-    # [5] = z norm
-    # [6] = r color     * Will start at [3] if no normals found
-    # [7] = g color
-    # [8] = b color
-    # [9] = a color
-    
-    # If len(verts[0]) is greater than 7, we have normals
-    vertlength = len(verts[0])
-    
-    # BRAD PATCH - allow for JWF's len(9) files
-    #   Needs a more elegant solution but this will band-aid for now
-    
-    if vertlength > 7:
-        if vertlength < 10:
-            jwf = True
-        else:
-            normals = True
-    
+
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
     mesh.vertices.add(len(obj[b'vertex']))
@@ -595,43 +560,21 @@ def load_ply_verts(self, filepath, ply_name):
   
     
     # COLOR
+    # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
     if colindices: 
-        # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
         bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
         newcolor = bpy.context.active_object.data
-        # If there are no normals, the color data will start at [3], otherwise [6]
         for i, col in enumerate(verts):
-            if normals == False:
-                if len(colindices) == 3:
-                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][3]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][4]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][5]) / 255.0
-                else: 
-                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][3]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][4]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][5]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[3] = (verts[i][6]) / 255.0
-            elif normals == True:        
-                if len(colindices) == 3:
-                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][6]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][7]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][8]) / 255.0
-                else: 
-                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][6]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][7]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][8]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[3] = (verts[i][9]) / 255.0
-            elif jwf == True:
-                if len(colindices) == 3:
-                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][3]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][4]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][5]) / 255.0
-                else: 
-                    newcolor.attributes['Col'].data[i].color[0] = (verts[i][3]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[1] = (verts[i][4]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[2] = (verts[i][5]) / 255.0
-                    newcolor.attributes['Col'].data[i].color[3] = (verts[i][6]) / 255.0
-            
+            if (len(colindices) <= 3):
+                newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
+                newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
+                newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
+            else: 
+                newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
+                newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
+                newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
+                newcolor.attributes['Col'].data[i].color[3] = (verts[i][colindices[3]]) / 255.0
+       
     mesh.update()
     mesh.validate()
 
