@@ -63,6 +63,7 @@ class ElementSpec:
         self.count = count
         self.properties = []
 
+# This one loads a line in from the file to the 'stream' buffer
     def load(self, format, stream):
         if format == b'ascii':
             stream = stream.readline().split()
@@ -87,6 +88,7 @@ class PropertySpec:
         self.list_type = list_type
         self.numeric_type = numeric_type
 
+#---FAKE STREAM HERE
     def read_format(self, format, count, num_type, stream):
         import struct
 
@@ -107,6 +109,7 @@ class PropertySpec:
             else:
                 mapper = int
             ans = [mapper(x) for x in stream[:count]]
+            # pop the buffer stack
             stream[:count] = []
             return ans
         else:
@@ -126,6 +129,8 @@ class PropertySpec:
                 data = stream.read(struct.calcsize(fmt))
                 return struct.unpack(fmt, data)
 
+#---FAKE STREAM HERE
+#current stream here is one-line buffer of current ply file line
     def load(self, format, stream):
         if self.list_type is not None:
             count = int(self.read_format(format, 1, self.list_type, stream)[0])
@@ -141,6 +146,10 @@ class ObjectSpec:
         # A list of element_specs
         self.specs = []
 
+#---FAKE STREAM HERE
+# i here is the empty container of correct types and lengths for one line.  
+#   type and length are built dynamically
+
     def load(self, format, stream):
         return {
             i.name: [
@@ -149,7 +158,7 @@ class ObjectSpec:
             for i in self.specs
         }
 
-
+# 28 March 2022 - this function reads and parses the ply header
 def read(self, filepath):
     import re
 
@@ -294,18 +303,28 @@ def read(self, filepath):
             print("Invalid header ('end_header' line not found!)")
             return invalid_ply
 
-        obj = obj_spec.load(format_specs[format], plyf)
+      
 
+    # 1 April 2022 - Moved these two conditions here 
         # If user attempts to load point cloud as mesh, flip the bit
-        #  ISSUE - Feb 20, 2022
         # Case 1 - Only verts in file
-        if len(obj) < 2:
+        if len(obj_spec.specs) < 2: 
             self.use_verts = True
 
         # Case 2 - 'element face 0' in file (JWF, we see you!)    
-        elif len(obj[b'face']) == 0:
+        elif (obj_spec.specs[1].count == 0):
             self.use_verts = True     
-       
+
+
+# 28 March 2022
+#       At this point the header has been parsed (or return invalid_ply)
+#       Note the file position pointer is already set at start of data
+
+        obj = obj_spec.load(format_specs[format], plyf)
+
+# Optimize Attempt 1:  If we have arrived here the file is good.  Commit to loading the entire thing into a buffer and then change the reference
+#                                       of 'plyf' and 'stream' to point to the buffer
+ 
     return obj_spec, obj, texture
 
 
@@ -501,6 +520,7 @@ def load_ply_verts(self, filepath, ply_name):
     import bpy
 
   #  ISSUE - Feb 20, 2022
+  #  if self.use_verts == False:
     obj_spec, obj, texture = read(self, filepath)
   
     if obj is None:
@@ -551,20 +571,14 @@ def load_ply_verts(self, filepath, ply_name):
     # If len(verts[0]) is greater than 7, we have normals
     vertlength = len(verts[0])
     
+    # BRAD PATCH - allow for JWF's len(9) files
+    #   Needs a more elegant solution but this will band-aid for now
     
-    # BRAD PATCH v2.0: JWF occasionally spits out len(9) files but so does BTracer2, albeit for different reasons.  This creates an index clash here as we need both
-    #                                   unique solutions for len(9)
- 
-   # Fix:             If verts[3] is a float, normals = true
-   #                     by implication, anything other is a JWF  
-
     if vertlength > 7:
-        # Bug Fix, 9 Mar 2022, changed <10 to <=10
-        if vertlength <= 10: 
-            if isinstance(verts[0][3], float):
-                normals = True
-            else:
-                jwf = True
+        if vertlength < 10:
+            jwf = True
+        else:
+            normals = True
     
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
