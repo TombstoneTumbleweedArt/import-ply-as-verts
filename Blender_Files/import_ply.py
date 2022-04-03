@@ -29,6 +29,9 @@
 
 
 # ######### CHANGELOG ######## 
+# 
+# v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
+#           extracting the named color data (rgb[a]) from colindices.
 #
 # v2.0 - Reintegrated the original importer and added Verts/Colors as load option.  Now correctly loads:
 #
@@ -63,7 +66,7 @@ class ElementSpec:
         self.count = count
         self.properties = []
 
-# This one loads a line in from the file to the 'stream' buffer
+
     def load(self, format, stream):
         if format == b'ascii':
             stream = stream.readline().split()
@@ -88,7 +91,7 @@ class PropertySpec:
         self.list_type = list_type
         self.numeric_type = numeric_type
 
-#---FAKE STREAM HERE
+
     def read_format(self, format, count, num_type, stream):
         import struct
 
@@ -129,8 +132,6 @@ class PropertySpec:
                 data = stream.read(struct.calcsize(fmt))
                 return struct.unpack(fmt, data)
 
-#---FAKE STREAM HERE
-#current stream here is one-line buffer of current ply file line
     def load(self, format, stream):
         if self.list_type is not None:
             count = int(self.read_format(format, 1, self.list_type, stream)[0])
@@ -145,10 +146,6 @@ class ObjectSpec:
     def __init__(self):
         # A list of element_specs
         self.specs = []
-
-#---FAKE STREAM HERE
-# i here is the empty container of correct types and lengths for one line.  
-#   type and length are built dynamically
 
     def load(self, format, stream):
         return {
@@ -591,9 +588,7 @@ def load_ply(self, filepath):
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
  
-    # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal
-    print(self.use_verts)
-    
+    # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal   
     if self.use_verts:
         mesh = load_ply_verts(self, filepath, ply_name)
     else:
