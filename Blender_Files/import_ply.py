@@ -558,6 +558,7 @@ def load_ply_verts(self, filepath, ply_name):
     
     # COLOR
     # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
+    # TODO: Make this more Pythonic
     if colindices: 
         bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
         newcolor = bpy.context.active_object.data
