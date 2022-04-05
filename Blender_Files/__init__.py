@@ -28,12 +28,12 @@ bl_info = {
     "category": "Import-Export",
 }
 
-### ORIGINAL COPYRIGHT
+# ORIGINAL COPYRIGHT
 # Copyright (C) 2004, 2005: Bruce Merry, bmerry@cs.uct.ac.za
 # Contributors: Bruce Merry, Campbell Barton
 
 
-### ORIGINAL bl_info BLOCK
+# ORIGINAL bl_info BLOCK
 '''
 bl_info = {
     "name": "Stanford PLY format",
@@ -82,7 +82,7 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
         description="File path used for importing the PLY file",
         type=bpy.types.OperatorFileListElement,
     )
- ### use_verts checkbox
+    # use_verts checkbox
     use_verts: BoolProperty(
         name="Verts/Colors Only",
         description="Import PLY model as colored vertex cloud  (No Faces/Edges)",
@@ -92,7 +92,6 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
 
     filename_ext = ".ply"
     filter_glob: StringProperty(default="*.ply", options={'HIDDEN'})
-
 
     def execute(self, context):
         import os
@@ -119,15 +118,14 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
 
         return {'FINISHED'}
 
-### Draw our checkbox
+    # Draw our checkbox
     def draw(self, context):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
 
         sfile = context.space_data
-        layout.label(text="IMPORT PLY AS VERTS?")        
-###        
+        layout.label(text="IMPORT PLY AS VERTS?")
 
 
 class PLY_PT_import_include(bpy.types.Panel):
@@ -152,7 +150,7 @@ class PLY_PT_import_include(bpy.types.Panel):
         operator = sfile.active_operator
 
         layout.prop(operator, "use_verts")
-   
+
 
 @orientation_helper(axis_forward='Y', axis_up='Z')
 class ExportPLY(bpy.types.Operator, ExportHelper):

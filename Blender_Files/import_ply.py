@@ -17,39 +17,33 @@
 # ##### END GPL LICENSE BLOCK #####
 
 # <pep8 compliant>
+'''
+ Import PLY as Verts
+ This module is close to 90% the original code supplied with Blender as the stock PLY import addon.
+ I have attempted to change it as little as possible and still obtain the desired result.
 
-# ########## Import PLY as Verts ########
-#
-# This module is close to 90% the original code supplied with Blender as the stock PLY import addon.  I have attempted
-# to change it as little as possible and still obtain the desired result. 
-#
-# All love and respect to the original programmers who did all the heavy lifting for me :) 
-#
-# ##########
+ All love and respect to the original programmers who did all the heavy lifting for me :)
 
+CHANGELOG
+ v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
+    extracting the named color data (rgb[a]) from colindices.
 
-# ######### CHANGELOG ######## 
-# 
-# v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
-#           extracting the named color data (rgb[a]) from colindices.
-#
-# v2.0 - Reintegrated the original importer and added Verts/Colors as load option.  Now correctly loads:
-#
-#                   MB3D BTracer Point Cloud PLY (v1.99 and earlier)
-#					MB3D BTracer2 PLY (v1.99.12 and later)
-#					JWF  Point Cloud (a few edge cases may remain, these will be patched as necessary)
-#					Photogrammetry and other generic PLY containing at least vertex and color information               
-#
-# v1.01 - "The Brad Patch": Added additional if clause to allow for unorthodox JWF ply files that contain odd
-#           data similar to pscale and intensity
-#          
+ v2.0 - Reintegrated the original importer and added Verts/Colors as load option.  Now correctly loads:
 
-# ######### ISSUES ########
-# 
-#       Feb 20, 2022 - When a user attempts to load a point cloud as a mesh, the autodetect routine causes read() to be called twice.  Working on a fix.
-#            
+    MB3D BTracer Point Cloud PLY (v1.99 and earlier)
+    MB3D BTracer2 PLY (v1.99.12 and later)
+    JWF  Point Cloud (a few edge cases may remain, these will be patched as necessary)
+    Photogrammetry and other generic PLY containing at least vertex and color information
+
+ v1.01 - "The Brad Patch": Added additional if clause to allow for unorthodox JWF ply files that contain odd
+    data similar to pscale and intensity
 
 
+ ISSUES
+      Feb 20, 2022 - When a user attempts to load a point cloud as a mesh,
+        the autodetect routine causes read() to be called twice.  Working on a fix.
+
+'''
 
 from pickle import FALSE
 
@@ -65,7 +59,6 @@ class ElementSpec:
         self.name = name
         self.count = count
         self.properties = []
-
 
     def load(self, format, stream):
         if format == b'ascii':
@@ -90,7 +83,6 @@ class PropertySpec:
         self.name = name
         self.list_type = list_type
         self.numeric_type = numeric_type
-
 
     def read_format(self, format, count, num_type, stream):
         import struct
@@ -155,6 +147,7 @@ class ObjectSpec:
             for i in self.specs
         }
 
+
 # 28 March 2022 - this function reads and parses the ply header
 def read(self, filepath):
     import re
@@ -198,10 +191,10 @@ def read(self, filepath):
 
         custom_line_sep = None
 
-        ### Allow for the following patterns:        CRLF (MB3D)                     LFCR (BTracer2)                   Binary / ASCII LF only (MeshLab et. al.)
-        #                                                          ASCII   1310                                                 1013                                                10 
+        #  Allow for the following patterns:        CRLF (MB3D)                     LFCR (BTracer2)                   Binary / ASCII LF only (MeshLab et. al.)
+        #                                                          ASCII   1310                                                 1013                                                10
         #                                                       Python    \r\n                                                   \n\r                                                  \n
-        
+
         # CRLF
         if signature[3] != ord(b'\n'):
             if signature[3] != ord(b'\r'):
@@ -211,19 +204,19 @@ def read(self, filepath):
                 custom_line_sep = b"\r\n"
             else:
                 custom_line_sep = b"\r"
-                
-        # The Others          
+
+        # The Others
         if signature[3] == ord(b'\n'):
             if(custom_line_sep is None):
                 # If no \r (ie LF only) present, force one
                 if signature[4] != ord(b'\r'):
-                       custom_line_sep = b'\n'
+                    custom_line_sep = b'\n'
                 else:
-                        custom_line_sep = b"\n\r"       
+                    custom_line_sep = b"\n\r"
         ########
 
         # Work around binary file reading only accepting "\n" as line separator.
-
+        # The below line causes pep8 code e731
         plyf_header_line_iterator = lambda plyf: plyf
         if custom_line_sep is not None:
             def _plyf_header_line_iterator(plyf):
@@ -300,35 +293,32 @@ def read(self, filepath):
             print("Invalid header ('end_header' line not found!)")
             return invalid_ply
 
-      
-
-    # 1 April 2022 - Moved these two conditions here 
+    # 1 April 2022 - Moved these two conditions here
         # If user attempts to load point cloud as mesh, flip the bit
         # Case 1 - Only verts in file
-        if len(obj_spec.specs) < 2: 
+        if len(obj_spec.specs) < 2:
             self.use_verts = True
 
-        # Case 2 - 'element face 0' in file (JWF, we see you!)    
+        # Case 2 - 'element face 0' in file (JWF, we see you!)
         elif (obj_spec.specs[1].count == 0):
-            self.use_verts = True     
+            self.use_verts = True
 
         obj = obj_spec.load(format_specs[format], plyf)
 
     return obj_spec, obj, texture
 
 
-
 def load_ply_mesh(self, filepath, ply_name):
     import bpy
 
     obj_spec, obj, texture = read(self, filepath)
-  
+
     if obj is None:
         print("Invalid file")
         return
 
     # If attempting to load a point cloud file as mesh, import as verts instead and bail out
-    if self.use_verts == True:
+    if self.use_verts:
         mesh = load_ply_verts(self, filepath, ply_name)
     else:
 
@@ -505,11 +495,12 @@ def load_ply_mesh(self, filepath, ply_name):
 
     return mesh
 
+
 def load_ply_verts(self, filepath, ply_name):
     import bpy
 
     obj_spec, obj, texture = read(self, filepath)
-  
+
     if obj is None:
         print("Invalid file")
         return
@@ -518,7 +509,7 @@ def load_ply_verts(self, filepath, ply_name):
     colmultiply = None
     normals = False
     jwf = False
- 
+
     # Read the file
     for el in obj_spec.specs:
         if el.name == b'vertex':
@@ -554,12 +545,11 @@ def load_ply_verts(self, filepath, ply_name):
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
-  
-    
+
     # COLOR
     # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
     # TODO: Make this more Pythonic
-    if colindices: 
+    if colindices:
         bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
         newcolor = bpy.context.active_object.data
         for i, col in enumerate(verts):
@@ -567,12 +557,12 @@ def load_ply_verts(self, filepath, ply_name):
                 newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
                 newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
                 newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
-            else: 
+            else:
                 newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
                 newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
                 newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
                 newcolor.attributes['Col'].data[i].color[3] = (verts[i][colindices[3]]) / 255.0
-       
+
     mesh.update()
     mesh.validate()
 
@@ -582,23 +572,24 @@ def load_ply_verts(self, filepath, ply_name):
 
     return mesh
 
+
 def load_ply(self, filepath):
     import time
     import bpy
-  
+
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
- 
-    # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal   
+
+    # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal
     if self.use_verts:
         mesh = load_ply_verts(self, filepath, ply_name)
     else:
-        mesh = load_ply_mesh(self,filepath, ply_name)
-        
+        mesh = load_ply_mesh(self, filepath, ply_name)
+
         # If a good ole' edge/face mesh is returned, create a Blender object.
         # (if an autodetected cloud comes back it will already have this done to it in load_ply_verts)
-       
-        if self.use_verts == False:
+
+        if not self.use_verts:
             for ob in bpy.context.selected_objects:
                 ob.select_set(False)
 
@@ -616,4 +607,4 @@ def load_ply(self, filepath):
 
 
 def load(operator, context, filepath=""):
-    return load_ply(operator, filepath)    
+    return load_ply(operator, filepath)
