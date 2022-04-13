@@ -108,10 +108,14 @@ Several things may happen at this point:
     - <i>Known Issue:- a bug in the autodetect slows performance as it causes the file to be read twice.  Currently working on a fix.</i>
 
 
-# Known Issues
+# Performance
+Importing a mesh is the heaviest operation, as importing the same file as verts is about 60% faster.  This is due to the triangle-building algorithm from the stock importer.  Improvements can be made here!
 
-   - PERFORMANCE: The new functionality comes at the cost of speed.  I'm currently moving the heavy file i/o operations (and anything else the profiler exposes) into C++.
-   -  ![Stats](https://user-images.githubusercontent.com/24717972/158803225-8be1cdfe-7c63-4adb-89e0-19dbe22d34f8.jpg)
+![Chart-03-SM](https://user-images.githubusercontent.com/24717972/163175009-83fa5c80-f3d1-4889-be28-c7af03cc61f7.jpg)
+
+*Stock time is listed only for reference - it's faster because it bails out and produces an unusable model.
+
+# Known Issues
 
    - The autodetect bug mentioned above.
    - The checkbox occasionally remains checked despite being False under the hood.  This is under investigation. 
