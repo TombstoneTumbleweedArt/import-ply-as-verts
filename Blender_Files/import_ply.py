@@ -190,11 +190,11 @@ def read(self, filepath):
             return invalid_ply
 
         custom_line_sep = None
-
-        #  Allow for the following patterns:        CRLF (MB3D)                     LFCR (BTracer2)                   Binary / ASCII LF only (MeshLab et. al.)
-        #                                                          ASCII   1310                                                 1013                                                10
-        #                                                       Python    \r\n                                                   \n\r                                                  \n
-
+        #  Allow for the following patterns:
+        #              CRLF (MB3D)  LFCR (BTracer2)     Binary / ASCII LF only
+        #   ASCII      1310         1013                10
+        #   Python     \r\n         \n\r                \n
+        
         # CRLF
         if signature[3] != ord(b'\n'):
             if signature[3] != ord(b'\r'):
