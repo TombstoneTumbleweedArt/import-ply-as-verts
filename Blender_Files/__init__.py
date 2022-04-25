@@ -94,10 +94,6 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
             paths.append(self.filepath)
 
         for path in paths:
-            if self.use_verts:
-                print("Verts-> True")
-            else:
-                print("Verts-> False")
             import_ply.load(self, context, path)
 
         context.window.cursor_set('DEFAULT')
