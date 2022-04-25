@@ -122,7 +122,7 @@ class ObjectSpec:
         }
 
 
-# 28 March 2022 - this function reads and parses the ply header
+# Read and parse the ply header
 def read(self, filepath):
     import re
 
@@ -292,152 +292,146 @@ def load_ply_mesh(self, filepath, ply_name):
     # If attempting to load a point cloud file as mesh, import as verts instead and bail out
     if self.use_verts:
         mesh = load_ply_verts(self, filepath, ply_name)
-    else:
+        return
 
-        uvindices = colindices = None
-        colmultiply = None
+    uvindices = colindices = None
+    colmultiply = None
+    # TODO import normals
+    # noindices = None
+    for el in obj_spec.specs:
+        if el.name == b'vertex':
+            vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
+            # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
+            # if -1 in noindices: noindices = None
+            uvindices = (el.index(b's'), el.index(b't'))
+            if -1 in uvindices:
+                uvindices = None
+            # ignore alpha if not present
+            if el.index(b'alpha') == -1:
+                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
+            else:
+                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
+            if -1 in colindices:
+                if any(idx > -1 for idx in colindices):
+                    print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
+                colindices = None
+            else:  # if not a float assume uchar
+                colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
 
-        # MP Comment - below comments are left from stock importer
-        # TODO import normals
-        # noindices = None
+        elif el.name == b'face':
+            findex = el.index(b'vertex_indices')
+        elif el.name == b'tristrips':
+            trindex = el.index(b'vertex_indices')
+        elif el.name == b'edge':
+            eindex1, eindex2 = el.index(b'vertex1'), el.index(b'vertex2')
 
-        for el in obj_spec.specs:
-            if el.name == b'vertex':
-                vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
-                # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
-                # if -1 in noindices: noindices = None
-                uvindices = (el.index(b's'), el.index(b't'))
-                if -1 in uvindices:
-                    uvindices = None
-                # ignore alpha if not present
-                if el.index(b'alpha') == -1:
-                    colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
-                else:
-                    colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
-                if -1 in colindices:
-                    if any(idx > -1 for idx in colindices):
-                        print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
-                    colindices = None
-                else:  # if not a float assume uchar
-                    colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
+    mesh_faces = []
+    mesh_uvs = []
+    mesh_colors = []
 
-            elif el.name == b'face':
-                findex = el.index(b'vertex_indices')
-            elif el.name == b'tristrips':
-                trindex = el.index(b'vertex_indices')
-            elif el.name == b'edge':
-                eindex1, eindex2 = el.index(b'vertex1'), el.index(b'vertex2')
+    def add_face(vertices, indices, uvindices, colindices):
+        mesh_faces.append(indices)
+        if uvindices:
+            mesh_uvs.extend([(vertices[index][uvindices[0]], vertices[index][uvindices[1]]) for index in indices])
+        if colindices:
+            if len(colindices) == 3:
+                mesh_colors.extend([
+                    (
+                        vertices[index][colindices[0]] * colmultiply[0],
+                        vertices[index][colindices[1]] * colmultiply[1],
+                        vertices[index][colindices[2]] * colmultiply[2],
+                        1.0,
+                    )
+                    for index in indices
+                ])
+            elif len(colindices) == 4:
+                mesh_colors.extend([
+                    (
+                        vertices[index][colindices[0]] * colmultiply[0],
+                        vertices[index][colindices[1]] * colmultiply[1],
+                        vertices[index][colindices[2]] * colmultiply[2],
+                        vertices[index][colindices[3]] * colmultiply[3],
+                    )
+                    for index in indices
+                ])
 
-        mesh_faces = []
-        mesh_uvs = []
-        mesh_colors = []
+    if uvindices or colindices:
+        # If we have Cols or UVs then we need to check the face order.
+        add_face_simple = add_face
 
+        # EVIL EEKADOODLE - face order annoyance.
         def add_face(vertices, indices, uvindices, colindices):
-            mesh_faces.append(indices)
-            if uvindices:
-                mesh_uvs.extend([(vertices[index][uvindices[0]], vertices[index][uvindices[1]]) for index in indices])
-            if colindices:
-                if len(colindices) == 3:
-                    mesh_colors.extend([
-                        (
-                            vertices[index][colindices[0]] * colmultiply[0],
-                            vertices[index][colindices[1]] * colmultiply[1],
-                            vertices[index][colindices[2]] * colmultiply[2],
-                            1.0,
-                        )
-                        for index in indices
-                    ])
-                elif len(colindices) == 4:
-                    mesh_colors.extend([
-                        (
-                            vertices[index][colindices[0]] * colmultiply[0],
-                            vertices[index][colindices[1]] * colmultiply[1],
-                            vertices[index][colindices[2]] * colmultiply[2],
-                            vertices[index][colindices[3]] * colmultiply[3],
-                        )
-                        for index in indices
-                    ])
+            if len(indices) == 4:
+                if indices[2] == 0 or indices[3] == 0:
+                    indices = indices[2], indices[3], indices[0], indices[1]
+            elif len(indices) == 3:
+                if indices[2] == 0:
+                    indices = indices[1], indices[2], indices[0]
 
-        if uvindices or colindices:
-            # If we have Cols or UVs then we need to check the face order.
-            add_face_simple = add_face
+            add_face_simple(vertices, indices, uvindices, colindices)
 
-            # EVIL EEKADOODLE - face order annoyance.
-            def add_face(vertices, indices, uvindices, colindices):
-                if len(indices) == 4:
-                    if indices[2] == 0 or indices[3] == 0:
-                        indices = indices[2], indices[3], indices[0], indices[1]
-                elif len(indices) == 3:
-                    if indices[2] == 0:
-                        indices = indices[1], indices[2], indices[0]
+    verts = obj[b'vertex']
 
-                add_face_simple(vertices, indices, uvindices, colindices)
+    if b'face' in obj:
+        for f in obj[b'face']:
+            ind = f[findex]
+            add_face(verts, ind, uvindices, colindices)
 
-        verts = obj[b'vertex']
+    if b'tristrips' in obj:
+        for t in obj[b'tristrips']:
+            ind = t[trindex]
+            len_ind = len(ind)
+            for j in range(len_ind - 2):
+                add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
 
-        if b'face' in obj:
-            for f in obj[b'face']:
-                ind = f[findex]
-                add_face(verts, ind, uvindices, colindices)
+    mesh = bpy.data.meshes.new(name=ply_name)
 
-        if b'tristrips' in obj:
-            for t in obj[b'tristrips']:
-                ind = t[trindex]
-                len_ind = len(ind)
-                for j in range(len_ind - 2):
-                    add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
+    mesh.vertices.add(len(obj[b'vertex']))
 
-        mesh = bpy.data.meshes.new(name=ply_name)
+    mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
 
-        mesh.vertices.add(len(obj[b'vertex']))
+    if b'edge' in obj:
+        mesh.edges.add(len(obj[b'edge']))
+        mesh.edges.foreach_set("vertices", [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])])
 
-        mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
+    if mesh_faces:
+        loops_vert_idx = []
+        faces_loop_start = []
+        faces_loop_total = []
+        lidx = 0
+        for f in mesh_faces:
+            nbr_vidx = len(f)
+            loops_vert_idx.extend(f)
+            faces_loop_start.append(lidx)
+            faces_loop_total.append(nbr_vidx)
+            lidx += nbr_vidx
 
-        if b'edge' in obj:
-            mesh.edges.add(len(obj[b'edge']))
-            mesh.edges.foreach_set("vertices", [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])])
+        mesh.loops.add(len(loops_vert_idx))
+        mesh.polygons.add(len(mesh_faces))
 
-        if mesh_faces:
-            loops_vert_idx = []
-            faces_loop_start = []
-            faces_loop_total = []
-            lidx = 0
-            for f in mesh_faces:
-                nbr_vidx = len(f)
-                loops_vert_idx.extend(f)
-                faces_loop_start.append(lidx)
-                faces_loop_total.append(nbr_vidx)
-                lidx += nbr_vidx
+        mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+        mesh.polygons.foreach_set("loop_start", faces_loop_start)
+        mesh.polygons.foreach_set("loop_total", faces_loop_total)
 
-            mesh.loops.add(len(loops_vert_idx))
-            mesh.polygons.add(len(mesh_faces))
+        if uvindices:
+            uv_layer = mesh.uv_layers.new()
+            for i, uv in enumerate(uv_layer.data):
+                uv.uv = mesh_uvs[i]
 
-            mesh.loops.foreach_set("vertex_index", loops_vert_idx)
-            mesh.polygons.foreach_set("loop_start", faces_loop_start)
-            mesh.polygons.foreach_set("loop_total", faces_loop_total)
+        if colindices:
+            vcol_lay = mesh.vertex_colors.new()
 
-            if uvindices:
-                uv_layer = mesh.uv_layers.new()
-                for i, uv in enumerate(uv_layer.data):
-                    uv.uv = mesh_uvs[i]
-
-            if colindices:
-                vcol_lay = mesh.vertex_colors.new()
-
-                for i, col in enumerate(vcol_lay.data):
-                    col.color[0] = mesh_colors[i][0]
-                    col.color[1] = mesh_colors[i][1]
-                    col.color[2] = mesh_colors[i][2]
-                    col.color[3] = mesh_colors[i][3]
+            for i, col in enumerate(vcol_lay.data):
+                col.color[0] = mesh_colors[i][0]
+                col.color[1] = mesh_colors[i][1]
+                col.color[2] = mesh_colors[i][2]
+                col.color[3] = mesh_colors[i][3]
 
         mesh.update()
         mesh.validate()
 
         if texture and uvindices:
             pass
-
-            # MP NOTE - Comments left from original code
-
             # TODO add support for using texture.
 
             # import os
