@@ -10,7 +10,7 @@
 <strong>3 April 2022 - Version 2.1 Release</strong>: fixed several compatibility issues with various odd types of Ply.
 
 
-
+ 
 # Why
 
 - Attempting to import <i><strong>any</strong></i> of the below PLY files with the stock importer will fail:
