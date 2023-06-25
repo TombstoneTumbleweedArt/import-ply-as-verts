@@ -1,5 +1,8 @@
 # import-ply-as-verts v2.1 &nbsp; &nbsp; &nbsp; &nbsp; [![Generic badge](https://img.shields.io/badge/Release-2.1-<COLOR>.svg)](https://shields.io/) &nbsp; &nbsp; &nbsp; &nbsp; ![Logo_Blender-Dark](https://user-images.githubusercontent.com/24717972/154959144-bd55fdc0-2ab9-43e4-8747-33c7465a9c8f.svg)    
 ## Blender 3.0 * / 3.1 Alpha (and later) New PLY Importer
+
+# NOTE: As of Blender 4.0 the original Python PLY import/export will be removed in favor of the new C++ modules.
+        However, this repo will remain. :)
 <ul>
   <li> * Vertex colored mesh only in 3.0 (see <strong>Compatibility</strong>).
   <li>Complete drop-in replacement for the stock Blender PLY import module.</li>
