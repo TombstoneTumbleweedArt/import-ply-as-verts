@@ -27,9 +27,10 @@ __________________________________
      - Mandelbulb3D BTracer2 PLY <i>(1.99.12 and later)</i>
      - J-Wildfire Point Cloud    <i>(Some incompatible edge cases may yet exist.  They will be patched as needed.</i>
      - Photogrammetry scans  <i>(MeshLab,</i> et. al.<i>)</i>
+     - Practically any 'extra' value beyond location, vertex normal, and vertex color.
 
 
- The result in Blender is the system console window error message "Invalid header, etc..."    
+ The result in Blender is the system console window error message "Invalid header, etc...", or no error at all.    
 
 
 
@@ -38,7 +39,7 @@ __________________________________
 
 Which has proven _most_ frustrating for several years now.
 
-> Prior to this, a good workaround was to process the point cloud in MeshLab.  I love MeshLab and use it often, but it is daunting at best.  The <i>real</i> idea was to have native Blender import.
+> Prior to this, a good workaround was to process the point cloud in MeshLab.  I love MeshLab and use it often, but it is daunting at best.  Furthermore, despite it being capable of importing a much wider variety of nonstandard PLY, MeshLab still strips out 'extra' data if the model is reexported.  The <i>real</i> idea was to have native Blender import.
 > Recent functions added under the hood of the Realize Instances node suddenly dovetailed with a standalone instancing app I had been working on since 2017.  Realizing that six nodes can replace my entire program, I cheerfully abandoned it and put full effort into the importer.
 
 The combined result is a completely new workflow for the point cloud enthusiast.
