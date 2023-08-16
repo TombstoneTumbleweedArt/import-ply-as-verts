@@ -25,6 +25,10 @@
  All love and respect to the original programmers who did all the heavy lifting for me :)
 
 CHANGELOG
+
+ v2.2 - Beginning the Jarvis Merge
+        # More edits by Katie Jarvis. Now reads in header file and creates named attributes based on ply file header
+
  v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
     extracting the named color data (rgb[a]) from colindices.
 
@@ -43,10 +47,16 @@ CHANGELOG
       Feb 20, 2022 - When a user attempts to load a point cloud as a mesh,
         the autodetect routine causes read() to be called twice.  Working on a fix.
 
+
+bl_info = {
+    "name": "Import PLY as Verts",
+    "author": "Michael A Prostka",
+    "blender": (3, 1, 0),
+    "location": "File > Import/Export",
+    "description": "Import PLY mesh data as point cloud",
+    "category": "Import-Export",
+}
 '''
-
-from pickle import FALSE
-
 
 class ElementSpec:
     __slots__ = (
@@ -149,7 +159,7 @@ class ObjectSpec:
 
 
 # 28 March 2022 - this function reads and parses the ply header
-def read(self, filepath):
+def read(filepath):
     import re
 
     format = b''
@@ -297,11 +307,11 @@ def read(self, filepath):
         # If user attempts to load point cloud as mesh, flip the bit
         # Case 1 - Only verts in file
         if len(obj_spec.specs) < 2:
-            self.use_verts = True
+            use_verts = True
 
         # Case 2 - 'element face 0' in file (JWF, we see you!)
         elif (obj_spec.specs[1].count == 0):
-            self.use_verts = True
+            use_verts = True
 
         obj = obj_spec.load(format_specs[format], plyf)
 
@@ -498,8 +508,9 @@ def load_ply_mesh(self, filepath, ply_name):
 
 def load_ply_verts(self, filepath, ply_name):
     import bpy
+    import numpy as np
 
-    obj_spec, obj, texture = read(self, filepath)
+    obj_spec, obj, texture = read(filepath)
 
     if obj is None:
         print("Invalid file")
