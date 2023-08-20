@@ -223,8 +223,28 @@ def read(filepath):
                     custom_line_sep = b'\n'
                 else:
                     custom_line_sep = b"\n\r"
-        ########
-
+        ######
+		# The Jarvis Parser™, Part 1
+        # Detects ALL property entries in the Header and extracts the literal name(s)
+		         
+        if custom_line_sep is None: # header split up by lines
+            lines=re.split(b'\n',signature)
+        else:
+            lines=x=re.split(custom_line_sep,signature)
+            
+        keys_glue=str(list(type_specs.keys())).replace(", ","|").replace("b'","").replace("'","") # turn into a binary regexp
+        
+        prog=re.compile(b'^property '+bytes(keys_glue,'utf-8')+ b'+ ')
+        #MP - added 'and not' clause to omit vertex index list
+        matches = [match for match in lines if match.startswith(b'property') and not match.startswith(b'property list')] #lines that start with word property
+        properties=[]
+        for it_ind in range(len(matches)):
+            properties.append([])
+            eraser=prog.findall(matches[it_ind])[0] #what we want to remove (everything but property name)
+            
+            properties[it_ind]=matches[it_ind].replace(eraser,b'').replace(b" ",b'') #reduce to just name of property and store in a list
+        #####
+        
         # Work around binary file reading only accepting "\n" as line separator.
         # The below line causes pep8 code e731
         plyf_header_line_iterator = lambda plyf: plyf
@@ -285,6 +305,7 @@ def read(filepath):
                     return invalid_ply
                 del version_test
                 format = tokens[1]
+                
             elif tokens[0] == b'element':
                 if len(tokens) < 3:
                     print("Invalid element line")
@@ -314,6 +335,19 @@ def read(filepath):
             use_verts = True
 
         obj = obj_spec.load(format_specs[format], plyf)
+        # Debugging header info
+        for spec in obj_spec.specs:
+            if spec.name == b'vertex':
+                numVerts = len(obj[b'vertex'])
+                print(f'Vertices-> {numVerts}')
+            if spec.name == b'face':
+                numFaces = len(obj[b'face'])
+                print(f'Faces-> {numFaces}')        
+        print(properties)        
+
+
+    # At this point we have all the necessary info.
+    # Roll it all together
 
     return obj_spec, obj, texture
 
@@ -321,7 +355,7 @@ def read(filepath):
 def load_ply_mesh(self, filepath, ply_name):
     import bpy
 
-    obj_spec, obj, texture = read(self, filepath)
+    obj_spec, obj, texture = read(filepath)
 
     if obj is None:
         print("Invalid file")
@@ -506,7 +540,7 @@ def load_ply_mesh(self, filepath, ply_name):
     return mesh
 
 
-def load_ply_verts(self, filepath, ply_name):
+def load_ply_verts(filepath, ply_name):
     import bpy
     import numpy as np
 
@@ -590,10 +624,23 @@ def load_ply(self, filepath):
 
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
+    
+    # Parse the header to construct attribute list
+    # Display Modal list with checkboxes 
+    
+    
+    
+    
+    # Perform header pre-check here to determine if faces > 0
+    # If not, use vert loader.
+    
+    # Open file; abort if invalid; until end_header readlines(); if element face < 1 load_ply_verts else
+    #		   													 load_ply_mesh
+    #print(ply_name)
 
     # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal
     if self.use_verts:
-        mesh = load_ply_verts(self, filepath, ply_name)
+        mesh = load_ply_verts(filepath, ply_name)
     else:
         mesh = load_ply_mesh(self, filepath, ply_name)
 
