@@ -50,10 +50,10 @@ CHANGELOG
 
 bl_info = {
     "name": "Import PLY as Verts",
-    "author": "Michael A Prostka",
+    "author": "Michael A Prostka, Katie Jarvis",
     "blender": (3, 1, 0),
     "location": "File > Import/Export",
-    "description": "Import PLY mesh data as point cloud",
+    "description": "Import PLY data with Attributes",
     "category": "Import-Export",
 }
 '''
@@ -323,9 +323,7 @@ def read(filepath):
         if not valid_header:
             print("Invalid header ('end_header' line not found!)")
             return invalid_ply
-
-    # 1 April 2022 - Moved these two conditions here
-        # If user attempts to load point cloud as mesh, flip the bit
+  
         # Case 1 - Only verts in file
         if len(obj_spec.specs) < 2:
             use_verts = True
@@ -334,16 +332,20 @@ def read(filepath):
         elif (obj_spec.specs[1].count == 0):
             use_verts = True
 
-        obj = obj_spec.load(format_specs[format], plyf)
         # Debugging header info
         for spec in obj_spec.specs:
             if spec.name == b'vertex':
-                numVerts = len(obj[b'vertex'])
-                print(f'Vertices-> {numVerts}')
+                print(f'Vertices-> {spec.count}')
             if spec.name == b'face':
-                numFaces = len(obj[b'face'])
-                print(f'Faces-> {numFaces}')        
-        print(properties)        
+                print(f'Faces-> {spec.count}')        
+        print(properties)  
+        print("Header has been parsed.")
+        print("Loading data...")
+        # So far only the header has been read into memory
+        # BOTTLENECK #1 - raw data load needs massive optimization etc.
+        obj = obj_spec.load(format_specs[format], plyf)
+        #print(obj)
+           
 
 
     # At this point we have all the necessary info.
@@ -355,17 +357,17 @@ def read(filepath):
 def load_ply_mesh(self, filepath, ply_name):
     import bpy
 
+    # BOTTLENECK #2 - all of this takes too long :)
     obj_spec, obj, texture = read(filepath)
-
+    print("Building mesh...")
+    # XXX28: use texture
     if obj is None:
         print("Invalid file")
         return
-
-    # If attempting to load a point cloud file as mesh, import as verts instead and bail out
+	# If attempting to load a point cloud file as mesh, import as verts instead and bail out
     if self.use_verts:
         mesh = load_ply_verts(self, filepath, ply_name)
     else:
-
         uvindices = colindices = None
         colmultiply = None
 
