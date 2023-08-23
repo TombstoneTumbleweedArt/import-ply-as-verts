@@ -26,7 +26,7 @@
 
 CHANGELOG
 
- v2.2 - Beginning the Jarvis Merge
+ v2.2 - The Jarvis Merge
         # More edits by Katie Jarvis. Now reads in header file and creates named attributes based on ply file header
 
  v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
@@ -80,7 +80,6 @@ class ElementSpec:
             if p.name == name:
                 return i
         return -1
-
 
 class PropertySpec:
     __slots__ = (
@@ -141,7 +140,6 @@ class PropertySpec:
         else:
             return self.read_format(format, 1, self.numeric_type, stream)[0]
 
-
 class ObjectSpec:
     __slots__ = ("specs",)
 
@@ -156,10 +154,8 @@ class ObjectSpec:
             ]
             for i in self.specs
         }
-
-
-# 28 March 2022 - this function reads and parses the ply header
-def read(filepath):
+###
+def read_header(filepath):
     import re
 
     format = b''
@@ -329,7 +325,7 @@ def read(filepath):
             use_verts = True
 
         # Case 2 - 'element face 0' in file (JWF, we see you!)
-        elif (obj_spec.specs[1].count == 0):
+        if (obj_spec.specs[1].count == 0):
             use_verts = True
 
         # Debugging header info
@@ -344,219 +340,211 @@ def read(filepath):
         # So far only the header has been read into memory
         # BOTTLENECK #1 - raw data load needs massive optimization etc.
         obj = obj_spec.load(format_specs[format], plyf)
-        #print(obj)
-           
+        #print(obj)         
+    return obj, obj_spec, properties, texture
+###
 
-
-    # At this point we have all the necessary info.
-    # Roll it all together
-
-    return obj_spec, obj, texture
-
-
-def load_ply_mesh(self, filepath, ply_name):
+#def load_ply_mesh(self, filepath, ply_name):
+def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
     import bpy
-
-    # BOTTLENECK #2 - all of this takes too long :)
-    obj_spec, obj, texture = read(filepath)
     print("Building mesh...")
+   
     # XXX28: use texture
-    if obj is None:
-        print("Invalid file")
-        return
-	# If attempting to load a point cloud file as mesh, import as verts instead and bail out
-    if self.use_verts:
-        mesh = load_ply_verts(self, filepath, ply_name)
-    else:
-        uvindices = colindices = None
-        colmultiply = None
+    uvindices = colindices = None
+    colmultiply = None
 
-        # MP Comment - below comments are left from stock importer
-        # TODO import normals
-        # noindices = None
+    # MP Comment - below comments are left from stock importer
+    # TODO import normals
+    # noindices = None
 
-        for el in obj_spec.specs:
-            if el.name == b'vertex':
-                vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
-                # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
-                # if -1 in noindices: noindices = None
-                uvindices = (el.index(b's'), el.index(b't'))
-                if -1 in uvindices:
-                    uvindices = None
-                # ignore alpha if not present
-                if el.index(b'alpha') == -1:
-                    colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
-                else:
-                    colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
-                if -1 in colindices:
-                    if any(idx > -1 for idx in colindices):
-                        print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
-                    colindices = None
-                else:  # if not a float assume uchar
-                    colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
+    for el in obj_spec.specs:
+        if el.name == b'vertex':
+            vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
+            # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
+            # if -1 in noindices: noindices = None
+            uvindices = (el.index(b's'), el.index(b't'))
+            if -1 in uvindices:
+                uvindices = None
+            # ignore alpha if not present
+            if el.index(b'alpha') == -1:
+                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
+            else:
+                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
+            if -1 in colindices:
+                if any(idx > -1 for idx in colindices):
+                    print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
+                colindices = None
+            else:  # if not a float assume uchar
+                colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
+        elif el.name == b'face':
+            findex = el.index(b'vertex_indices')
+        elif el.name == b'tristrips':
+            trindex = el.index(b'vertex_indices')
+        elif el.name == b'edge':
+            eindex1, eindex2 = el.index(b'vertex1'), el.index(b'vertex2')
 
-            elif el.name == b'face':
-                findex = el.index(b'vertex_indices')
-            elif el.name == b'tristrips':
-                trindex = el.index(b'vertex_indices')
-            elif el.name == b'edge':
-                eindex1, eindex2 = el.index(b'vertex1'), el.index(b'vertex2')
+    mesh_faces = []
+    mesh_uvs = []
+    mesh_colors = []
 
-        mesh_faces = []
-        mesh_uvs = []
-        mesh_colors = []
+    def add_face(vertices, indices, uvindices, colindices):
+        mesh_faces.append(indices)
+        if uvindices:
+            mesh_uvs.extend([(vertices[index][uvindices[0]], vertices[index][uvindices[1]]) for index in indices])
+        if colindices:
+            if len(colindices) == 3:
+                mesh_colors.extend([
+                    (
+                        vertices[index][colindices[0]] * colmultiply[0],
+                        vertices[index][colindices[1]] * colmultiply[1],
+                        vertices[index][colindices[2]] * colmultiply[2],
+                        1.0,
+                    )
+                    for index in indices
+                ])
+            elif len(colindices) == 4:
+                mesh_colors.extend([
+                    (
+                        vertices[index][colindices[0]] * colmultiply[0],
+                        vertices[index][colindices[1]] * colmultiply[1],
+                        vertices[index][colindices[2]] * colmultiply[2],
+                        vertices[index][colindices[3]] * colmultiply[3],
+                    )
+                    for index in indices
+                ])
 
+    if uvindices or colindices:
+        # If we have Cols or UVs then we need to check the face order.
+        add_face_simple = add_face
+
+        # EVIL EEKADOODLE - face order annoyance.
         def add_face(vertices, indices, uvindices, colindices):
-            mesh_faces.append(indices)
-            if uvindices:
-                mesh_uvs.extend([(vertices[index][uvindices[0]], vertices[index][uvindices[1]]) for index in indices])
-            if colindices:
-                if len(colindices) == 3:
-                    mesh_colors.extend([
-                        (
-                            vertices[index][colindices[0]] * colmultiply[0],
-                            vertices[index][colindices[1]] * colmultiply[1],
-                            vertices[index][colindices[2]] * colmultiply[2],
-                            1.0,
-                        )
-                        for index in indices
-                    ])
-                elif len(colindices) == 4:
-                    mesh_colors.extend([
-                        (
-                            vertices[index][colindices[0]] * colmultiply[0],
-                            vertices[index][colindices[1]] * colmultiply[1],
-                            vertices[index][colindices[2]] * colmultiply[2],
-                            vertices[index][colindices[3]] * colmultiply[3],
-                        )
-                        for index in indices
-                    ])
+            if len(indices) == 4:
+                if indices[2] == 0 or indices[3] == 0:
+                    indices = indices[2], indices[3], indices[0], indices[1]
+            elif len(indices) == 3:
+                if indices[2] == 0:
+                    indices = indices[1], indices[2], indices[0]
 
-        if uvindices or colindices:
-            # If we have Cols or UVs then we need to check the face order.
-            add_face_simple = add_face
+            add_face_simple(vertices, indices, uvindices, colindices)
 
-            # EVIL EEKADOODLE - face order annoyance.
-            def add_face(vertices, indices, uvindices, colindices):
-                if len(indices) == 4:
-                    if indices[2] == 0 or indices[3] == 0:
-                        indices = indices[2], indices[3], indices[0], indices[1]
-                elif len(indices) == 3:
-                    if indices[2] == 0:
-                        indices = indices[1], indices[2], indices[0]
+    verts = obj[b'vertex']
 
-                add_face_simple(vertices, indices, uvindices, colindices)
+    if b'face' in obj:
+        for f in obj[b'face']:
+            ind = f[findex]
+            add_face(verts, ind, uvindices, colindices)
 
-        verts = obj[b'vertex']
+    if b'tristrips' in obj:
+        for t in obj[b'tristrips']:
+            ind = t[trindex]
+            len_ind = len(ind)
+            for j in range(len_ind - 2):
+                add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
 
-        if b'face' in obj:
-            for f in obj[b'face']:
-                ind = f[findex]
-                add_face(verts, ind, uvindices, colindices)
+    mesh = bpy.data.meshes.new(name=ply_name)
 
-        if b'tristrips' in obj:
-            for t in obj[b'tristrips']:
-                ind = t[trindex]
-                len_ind = len(ind)
-                for j in range(len_ind - 2):
-                    add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
+    mesh.vertices.add(len(obj[b'vertex']))
 
-        mesh = bpy.data.meshes.new(name=ply_name)
+    mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
 
-        mesh.vertices.add(len(obj[b'vertex']))
+    if b'edge' in obj:
+        mesh.edges.add(len(obj[b'edge']))
+        mesh.edges.foreach_set("vertices", [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])])
 
-        mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
+    if mesh_faces:
+        loops_vert_idx = []
+        faces_loop_start = []
+        faces_loop_total = []
+        lidx = 0
+        for f in mesh_faces:
+            nbr_vidx = len(f)
+            loops_vert_idx.extend(f)
+            faces_loop_start.append(lidx)
+            faces_loop_total.append(nbr_vidx)
+            lidx += nbr_vidx
 
-        if b'edge' in obj:
-            mesh.edges.add(len(obj[b'edge']))
-            mesh.edges.foreach_set("vertices", [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])])
+        mesh.loops.add(len(loops_vert_idx))
+        mesh.polygons.add(len(mesh_faces))
 
-        if mesh_faces:
-            loops_vert_idx = []
-            faces_loop_start = []
-            faces_loop_total = []
-            lidx = 0
-            for f in mesh_faces:
-                nbr_vidx = len(f)
-                loops_vert_idx.extend(f)
-                faces_loop_start.append(lidx)
-                faces_loop_total.append(nbr_vidx)
-                lidx += nbr_vidx
+        mesh.loops.foreach_set("vertex_index", loops_vert_idx)
+        mesh.polygons.foreach_set("loop_start", faces_loop_start)
+        mesh.polygons.foreach_set("loop_total", faces_loop_total)
 
-            mesh.loops.add(len(loops_vert_idx))
-            mesh.polygons.add(len(mesh_faces))
+        if uvindices:
+            uv_layer = mesh.uv_layers.new()
+            for i, uv in enumerate(uv_layer.data):
+                uv.uv = mesh_uvs[i]
 
-            mesh.loops.foreach_set("vertex_index", loops_vert_idx)
-            mesh.polygons.foreach_set("loop_start", faces_loop_start)
-            mesh.polygons.foreach_set("loop_total", faces_loop_total)
+        if colindices:
+            vcol_lay = mesh.vertex_colors.new()
 
-            if uvindices:
-                uv_layer = mesh.uv_layers.new()
-                for i, uv in enumerate(uv_layer.data):
-                    uv.uv = mesh_uvs[i]
+            for i, col in enumerate(vcol_lay.data):
+                col.color[0] = mesh_colors[i][0]
+                col.color[1] = mesh_colors[i][1]
+                col.color[2] = mesh_colors[i][2]
+                col.color[3] = mesh_colors[i][3]
 
-            if colindices:
-                vcol_lay = mesh.vertex_colors.new()
+    mesh.update()
+    mesh.validate()
 
-                for i, col in enumerate(vcol_lay.data):
-                    col.color[0] = mesh_colors[i][0]
-                    col.color[1] = mesh_colors[i][1]
-                    col.color[2] = mesh_colors[i][2]
-                    col.color[3] = mesh_colors[i][3]
+    if texture and uvindices:
+        pass
 
-        mesh.update()
-        mesh.validate()
+        # MP NOTE - Comment left from original code
 
-        if texture and uvindices:
-            pass
+        # TODO add support for using texture.
 
-            # MP NOTE - Comment left from original code
+        # import os
+        # import sys
+        # from bpy_extras.image_utils import load_image
 
-            # TODO add support for using texture.
+        # encoding = sys.getfilesystemencoding()
+        # encoded_texture = texture.decode(encoding=encoding)
+        # name = bpy.path.display_name_from_filepath(texture)
+        # image = load_image(encoded_texture, os.path.dirname(filepath), recursive=True, place_holder=True)
 
-            # import os
-            # import sys
-            # from bpy_extras.image_utils import load_image
+        # if image:
+        #     texture = bpy.data.textures.new(name=name, type='IMAGE')
+        #     texture.image = image
 
-            # encoding = sys.getfilesystemencoding()
-            # encoded_texture = texture.decode(encoding=encoding)
-            # name = bpy.path.display_name_from_filepath(texture)
-            # image = load_image(encoded_texture, os.path.dirname(filepath), recursive=True, place_holder=True)
+        #     material = bpy.data.materials.new(name=name)
+        #     material.use_shadeless = True
 
-            # if image:
-            #     texture = bpy.data.textures.new(name=name, type='IMAGE')
-            #     texture.image = image
+        #     mtex = material.texture_slots.add()
+        #     mtex.texture = texture
+        #     mtex.texture_coords = 'UV'
+        #     mtex.use_map_color_diffuse = True
 
-            #     material = bpy.data.materials.new(name=name)
-            #     material.use_shadeless = True
-
-            #     mtex = material.texture_slots.add()
-            #     mtex.texture = texture
-            #     mtex.texture_coords = 'UV'
-            #     mtex.use_map_color_diffuse = True
-
-            #     mesh.materials.append(material)
-            #     for face in mesh.uv_textures[0].data:
-            #         face.image = image
-
+        #     mesh.materials.append(material)
+        #     for face in mesh.uv_textures[0].data:
+        #         face.image = image
+    
+    # Create our new object here    
+    for ob in bpy.context.selected_objects:
+        ob.select_set(False)
+    obj = bpy.data.objects.new(ply_name, mesh)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    print("Mesh Built")
+    
     return mesh
 
-
-def load_ply_verts(filepath, ply_name):
+#def load_ply_verts(filepath, ply_name):
+def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     import bpy
     import numpy as np
 
-    obj_spec, obj, texture = read(filepath)
+    #obj_spec, obj, texture = read(filepath)
 
-    if obj is None:
-        print("Invalid file")
-        return
+   # if obj is None:
+   #     print("Invalid file")
+   #     return
 
     uvindices = colindices = None
     colmultiply = None
-    normals = False
-    jwf = False
-
+   
     # Read the file
     for el in obj_spec.specs:
         if el.name == b'vertex':
@@ -617,8 +605,8 @@ def load_ply_verts(filepath, ply_name):
     if texture and uvindices:
         pass
 
+    print("Vert Mesh built.")
     return mesh
-
 
 def load_ply(self, filepath):
     import time
@@ -627,37 +615,19 @@ def load_ply(self, filepath):
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
     
-    # Parse the header to construct attribute list
-    # Display Modal list with checkboxes 
+    obj, obj_spec, properties, texture = read_header(filepath)
     
+    if obj is None:
+        print("Invalid file")
+        return
     
-    
-    
-    # Perform header pre-check here to determine if faces > 0
-    # If not, use vert loader.
-    
-    # Open file; abort if invalid; until end_header readlines(); if element face < 1 load_ply_verts else
-    #		   													 load_ply_mesh
-    #print(ply_name)
-
-    # If the user clicks Ply as Verts, use that loader.  Otherwise proceed as normal
     if self.use_verts:
-        mesh = load_ply_verts(filepath, ply_name)
+        print("Verts Only")
+        mesh = load_ply_verts(obj_spec, obj, texture, properties, ply_name)
     else:
-        mesh = load_ply_mesh(self, filepath, ply_name)
-
-        # If a good ole' edge/face mesh is returned, create a Blender object.
-        # (if an autodetected cloud comes back it will already have this done to it in load_ply_verts)
-
-        if not self.use_verts:
-            for ob in bpy.context.selected_objects:
-                ob.select_set(False)
-
-            obj = bpy.data.objects.new(ply_name, mesh)
-            bpy.context.collection.objects.link(obj)
-            bpy.context.view_layer.objects.active = obj
-            obj.select_set(True)
-
+        print("Verts and Faces")
+        mesh = load_ply_mesh(obj_spec, obj, texture, properties, ply_name)
+ 
     if not mesh:
         return {'CANCELLED'}
 
