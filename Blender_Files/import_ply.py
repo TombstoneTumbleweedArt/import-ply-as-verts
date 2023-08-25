@@ -570,7 +570,7 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
                         if stand_props[loop_ind] in not_standard:
                             not_standard.remove(stand_props[loop_ind])
                             
-                    if len(not_standard)!=0:
+                    if not_standard:
                         weirdind=[] # create variable for non-standard indices, later we check for length !=0
                         for loop_ind in range(len(not_standard)):
                             weirdind.append(el.index(not_standard[loop_ind])) # gives us locations of other attributes within the list
