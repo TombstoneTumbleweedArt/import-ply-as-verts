@@ -26,7 +26,7 @@
 
 CHANGELOG
 
- v2.2 - The Jarvis Merge
+ v2.2 - The Jarvis Merge. MASSIVE improvements.
         # More edits by Katie Jarvis. Now reads in header file and creates named attributes based on ply file header
 
  v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
