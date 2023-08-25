@@ -43,11 +43,6 @@ CHANGELOG
     data similar to pscale and intensity
 
 
- ISSUES
-      Feb 20, 2022 - When a user attempts to load a point cloud as a mesh,
-        the autodetect routine causes read() to be called twice.  Working on a fix.
-
-
 bl_info = {
     "name": "Import PLY as Verts",
     "author": "Michael A Prostka, Katie Jarvis",
@@ -325,8 +320,9 @@ def read_header(filepath):
             use_verts = True
 
         # Case 2 - 'element face 0' in file (JWF, we see you!)
-        if (obj_spec.specs[1].count == 0):
-            use_verts = True
+        # Don't think this is needed anymore?
+        #if (obj_spec.specs[1].count == 0):
+        #    use_verts = True
 
         # Debugging header info
         for spec in obj_spec.specs:
@@ -545,28 +541,45 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     uvindices = colindices = None
     colmultiply = None
    
-    # Read the file
+    # Parse the data 
     for el in obj_spec.specs:
         if el.name == b'vertex':
+            weirdind=[] #create weirdind list, with length of zero
             vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
             uvindices = (el.index(b's'), el.index(b't'))
             if -1 in uvindices:
                 uvindices = None
-            # ignore alpha if not present
-            if el.index(b'alpha') == -1:
-                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
-            else:
-                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
-            if -1 in colindices:
-                if any(idx > -1 for idx in colindices):
-                    print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
-                colindices = None
-            else:  # if not a float assume uchar
-                colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
-
+            ######
+            # The Jarvis Parser™, Part 2
+            
+            if len(properties)>3: # more than just x, y, and z
+                for it_var in range(len(properties)):
+                    #RGBA
+                    if any(color in s.lower() for color in (b'red', b'green', b'blue', b'alpha') for s in properties):   
+                        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
+                    #RGB
+                    elif any(color in s.lower() for color in (b'red', b'green', b'blue') for s in properties):    
+                        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
+                    stand_props=[b'x', b'y', b'z', b'red', b'green', b'blue', b'alpha'] #standard properties list
+                    # note that the above line WILL remove single color channels from your "custom attributes". 
+                    # so if you  have red and green but not blue or alpha but not rgb, they won't make it into the final 
+                    # properties list. consider renaming these properties if you don't want to lose them
+                    
+                    not_standard=properties[0:] #pre-allocate
+                    for loop_ind in range(len(stand_props)): # get rid of xyz,rgba
+                        if stand_props[loop_ind] in not_standard:
+                            not_standard.remove(stand_props[loop_ind])
+                            
+                    if len(not_standard)!=0:
+                        weirdind=[] # create variable for non-standard indices, later we check for length !=0
+                        for loop_ind in range(len(not_standard)):
+                            weirdind.append(el.index(not_standard[loop_ind])) # gives us locations of other attributes within the list
+    
+    #print(weirdind)
     mesh_uvs = []
     mesh_colors = []
     verts = obj[b'vertex']
+    num_props=np.size(verts[0])
 
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
@@ -580,24 +593,50 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
-
+    numverts=np.size(verts,0)
+    
     # COLOR
     # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
     # TODO: Make this more Pythonic
-    if colindices:
-        bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
-        newcolor = bpy.context.active_object.data
-        for i, col in enumerate(verts):
-            if (len(colindices) <= 3):
-                newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
-                newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
-                newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
-            else:
-                newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
-                newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
-                newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
-                newcolor.attributes['Col'].data[i].color[3] = (verts[i][colindices[3]]) / 255.0
-
+   # if colindices:
+   #     bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
+   #     newcolor = bpy.context.active_object.data
+   #     for i, col in enumerate(verts):
+    #        if (len(colindices) <= 3):
+   #             newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
+    #            newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
+    #            newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
+    #        else:
+    #            newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
+     #           newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
+    #            newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
+     #           newcolor.attributes['Col'].data[i].color[3] = (verts[i][colindices[3]]) / 255.0
+    
+    ######
+    # The Jarvis Parser™, Part 3
+   
+    newattribute = bpy.context.active_object.data # renamed from newcolor
+    color_indices = colindices
+   # other_indices = weirdind
+    
+    if weirdind: #create custom variable names
+        for j, item in enumerate(weirdind):
+            newattribute.attributes.new(name=str(not_standard[j], 'utf-8'), type='FLOAT', domain='POINT')
+    if colindices and weirdind:
+        newattribute.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')  
+        for i in range(numverts):    
+            newattribute.attributes['Col'].data[i].color = [(verts[i][colindex]) / 255.0 for colindex in colindices]
+            for j in range(len(weirdind)):
+                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])           
+    elif weirdind: # no colors but still custom attributes
+        for i in range(numverts):
+            for j in range(len(weirdind)):
+                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])        
+    elif colindices: #just colors, no custom attributes
+        newattribute.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')      
+        for i in range(numverts):     
+            newattribute.attributes['Col'].data[i].color = [(verts[i][colindex]) / 255.0 for colindex in colindices]  
+              
     mesh.update()
     mesh.validate()
 
