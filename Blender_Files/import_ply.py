@@ -19,15 +19,16 @@
 # <pep8 compliant>
 '''
  Import PLY as Verts
- This module is close to 90% the original code supplied with Blender as the stock PLY import addon.
- I have attempted to change it as little as possible and still obtain the desired result.
-
- All love and respect to the original programmers who did all the heavy lifting for me :)
+ Up to the 2.2 Release, this module was close to 90% original Blender stock PLY import addon.
+ With the changes introduced by Ms. Jarvis it no longer resembles the 2004 Python of that
+ era, and the new functionality places it into a new weight class.  
+ 
+ Still all love and respect to the original programmers. :)
 
 CHANGELOG
 
- v2.2 - The Jarvis Merge. MASSIVE improvements.
-        # More edits by Katie Jarvis. Now reads in header file and creates named attributes based on ply file header
+ v2.2 - The Jarvis Merge.  MASSIVE improvements.
+        Now reads in header file and creates named attributes based on ply file header
 
  v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
     extracting the named color data (rgb[a]) from colindices.
@@ -319,30 +320,48 @@ def read_header(filepath):
         if len(obj_spec.specs) < 2:
             use_verts = True
 
-        # Case 2 - 'element face 0' in file (JWF, we see you!)
+        # Case 2 - 
         # Don't think this is needed anymore?
-        #if (obj_spec.specs[1].count == 0):
-        #    use_verts = True
+       # if (obj_spec.specs[1].count == 0):
+          #  use_verts = True
 
         # Debugging header info
         for spec in obj_spec.specs:
             if spec.name == b'vertex':
                 print(f'Vertices-> {spec.count}')
             if spec.name == b'face':
-                print(f'Faces-> {spec.count}')        
+                print(f'Faces-> {spec.count}')
+                if spec.count == 0: #'element face 0' in file (JWF, we see you!)
+                    use_verts = True
         print(properties)  
         print("Header has been parsed.")
         print("Loading data...")
-        # So far only the header has been read into memory
+       
         # BOTTLENECK #1 - raw data load needs massive optimization etc.
         obj = obj_spec.load(format_specs[format], plyf)
-        #print(obj)         
+                
     return obj, obj_spec, properties, texture
-###
 
+def get_properties(properties, colindices, el):
+    stand_props=[b'x', b'y', b'z', b'red', b'green', b'blue', b'alpha'] # standard properties list
+    not_standard = list(set(properties) - set(stand_props)) # the result has to be a list of strings
+    weirdind=[]
+    if any(color in s.lower() for color in (b'red', b'green', b'blue', b'alpha') for s in properties):   
+        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
+    elif any(color in s.lower() for color in (b'red', b'green', b'blue') for s in properties):    
+        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
+    
+    if not_standard:
+        for loop_ind in range(len(not_standard)):
+            weirdind.append(el.index(not_standard[loop_ind])) # gives us locations of other attributes within the list
+
+    print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')    
+    return not_standard, weirdind, colindices
+    
 #def load_ply_mesh(self, filepath, ply_name):
 def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
     import bpy
+    import numpy as np
     print("Building mesh...")
    
     # XXX28: use texture
@@ -355,23 +374,30 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
 
     for el in obj_spec.specs:
         if el.name == b'vertex':
+            weirdind=[] #create weirdind list, with length of zero
             vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
             # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
             # if -1 in noindices: noindices = None
             uvindices = (el.index(b's'), el.index(b't'))
             if -1 in uvindices:
                 uvindices = None
+            
+    # The Jarvis Parser™, Part 2
+            if len(properties)>3: # more than just x, y, and z
+                not_standard, weirdind, colindices = get_properties(properties, colindices, el)            
             # ignore alpha if not present
             if el.index(b'alpha') == -1:
                 colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
             else:
                 colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
+            print(colindices)
             if -1 in colindices:
                 if any(idx > -1 for idx in colindices):
                     print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
                 colindices = None
             else:  # if not a float assume uchar
                 colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
+                
         elif el.name == b'face':
             findex = el.index(b'vertex_indices')
         elif el.name == b'tristrips':
@@ -425,7 +451,8 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
             add_face_simple(vertices, indices, uvindices, colindices)
 
     verts = obj[b'vertex']
-
+    num_props = np.size(verts[0])
+    
     if b'face' in obj:
         for f in obj[b'face']:
             ind = f[findex]
@@ -480,7 +507,33 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
                 col.color[1] = mesh_colors[i][1]
                 col.color[2] = mesh_colors[i][2]
                 col.color[3] = mesh_colors[i][3]
-
+    
+     # Create our new object here    
+    for ob in bpy.context.selected_objects:
+        ob.select_set(False)
+    obj = bpy.data.objects.new(ply_name, mesh)
+    bpy.context.collection.objects.link(obj)
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    numverts=np.size(verts,0)
+    print("Mesh Built")
+    
+    # The Jarvis Parser™, Part 3a Triangle Mesh with Attributes
+   
+    newattribute = bpy.context.active_object.data # renamed from newcolor
+    color_indices = colindices
+    if weirdind: #create custom variable names
+        for j, item in enumerate(weirdind):
+            newattribute.attributes.new(name=str(not_standard[j], 'utf-8'), type='FLOAT', domain='POINT')
+    if colindices and weirdind:
+        for i in range(numverts):    
+            for j in range(len(weirdind)):
+                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])           
+    elif weirdind: # no colors but still custom attributes
+        for i in range(numverts):
+            for j in range(len(weirdind)):
+                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])        
+                    
     mesh.update()
     mesh.validate()
 
@@ -516,27 +569,13 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
         #     for face in mesh.uv_textures[0].data:
         #         face.image = image
     
-    # Create our new object here    
-    for ob in bpy.context.selected_objects:
-        ob.select_set(False)
-    obj = bpy.data.objects.new(ply_name, mesh)
-    bpy.context.collection.objects.link(obj)
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    print("Mesh Built")
+   
     
     return mesh
-
-#def load_ply_verts(filepath, ply_name):
+    
 def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     import bpy
     import numpy as np
-
-    #obj_spec, obj, texture = read(filepath)
-
-   # if obj is None:
-   #     print("Invalid file")
-   #     return
 
     uvindices = colindices = None
     colmultiply = None
@@ -549,37 +588,17 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
             uvindices = (el.index(b's'), el.index(b't'))
             if -1 in uvindices:
                 uvindices = None
-            ######
-            # The Jarvis Parser™, Part 2
             
+            # The Jarvis Parser™, Part 2
             if len(properties)>3: # more than just x, y, and z
-                for it_var in range(len(properties)):
-                    #RGBA
-                    if any(color in s.lower() for color in (b'red', b'green', b'blue', b'alpha') for s in properties):   
-                        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
-                    #RGB
-                    elif any(color in s.lower() for color in (b'red', b'green', b'blue') for s in properties):    
-                        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
-                    stand_props=[b'x', b'y', b'z', b'red', b'green', b'blue', b'alpha'] #standard properties list
-                    # note that the above line WILL remove single color channels from your "custom attributes". 
-                    # so if you  have red and green but not blue or alpha but not rgb, they won't make it into the final 
-                    # properties list. consider renaming these properties if you don't want to lose them
-                    
-                    not_standard=properties[0:] #pre-allocate
-                    for loop_ind in range(len(stand_props)): # get rid of xyz,rgba
-                        if stand_props[loop_ind] in not_standard:
-                            not_standard.remove(stand_props[loop_ind])
-                            
-                    if not_standard:
-                        weirdind=[] # create variable for non-standard indices, later we check for length !=0
-                        for loop_ind in range(len(not_standard)):
-                            weirdind.append(el.index(not_standard[loop_ind])) # gives us locations of other attributes within the list
-    
-    #print(weirdind)
+                not_standard, weirdind, colindices = get_properties(properties, colindices, el)
+               
     mesh_uvs = []
     mesh_colors = []
     verts = obj[b'vertex']
     num_props=np.size(verts[0])
+
+    #print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')
 
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
@@ -613,11 +632,10 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
      #           newcolor.attributes['Col'].data[i].color[3] = (verts[i][colindices[3]]) / 255.0
     
     ######
-    # The Jarvis Parser™, Part 3
+    # The Jarvis Parser™, Part 3b - Point Cloud with Attributes
    
     newattribute = bpy.context.active_object.data # renamed from newcolor
     color_indices = colindices
-   # other_indices = weirdind
     
     if weirdind: #create custom variable names
         for j, item in enumerate(weirdind):
