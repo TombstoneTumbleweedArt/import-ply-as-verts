@@ -20,11 +20,11 @@
 
 bl_info = {
     "name": "Import PLY as Verts",
-    "author": "Michael A. Prostka (based on Merry, Barton, Montagne, and Rachinsky",
-    "version": (2, 0, 0),
+    "author": "Michael A. Prostka, Katie Jarvis (after Merry, Barton, Montagne, and Rachinsky)",
+    "version": (3, 0, 0),
     "blender": (3, 0, 0),
     "location": "File > Import/Export",
-    "description": "Import-Export PLY data (as Mesh or Cloud) with UVs and vertex colors",
+    "description": "Import-Export PLY data (as Mesh or Cloud) with custom Attributes.",
     "category": "Import-Export",
 }
 
@@ -71,7 +71,7 @@ from bpy_extras.io_utils import (
 )
 
 
-class ImportPLY(bpy.types.Operator, ImportHelper):
+class ImportPLYv(bpy.types.Operator, ImportHelper):
     """Load a PLY geometry file"""
     bl_idname = "import_mesh.ply"
     bl_label = "Import PLY as Verts"
@@ -84,8 +84,9 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
     )
     # use_verts checkbox
     use_verts: BoolProperty(
-        name="Verts/Colors Only",
-        description="Import PLY model as colored vertex cloud  (No Faces/Edges)",
+        name="Ignore Faces",
+        description="Import PLY model as Verts with Attributes (No Faces/Edges)",
+        default = True,
     )
 
     directory: StringProperty()
@@ -145,7 +146,7 @@ class PLY_PT_import_include(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-
+       
         sfile = context.space_data
         operator = sfile.active_operator
 
@@ -314,7 +315,7 @@ class PLY_PT_export_geometry(bpy.types.Panel):
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportPLY.bl_idname, text="Stanford PLY as Verts")
+    self.layout.operator(ImportPLYv.bl_idname, text="Stanford PLY as Verts")
 
 
 def menu_func_export(self, context):
@@ -322,7 +323,7 @@ def menu_func_export(self, context):
 
 
 classes = (
-    ImportPLY,
+    ImportPLYv,
     ExportPLY,
     PLY_PT_import_include,
     PLY_PT_export_include,
