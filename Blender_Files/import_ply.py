@@ -19,7 +19,7 @@
 # <pep8 compliant>
 '''
  Import PLY as Verts
- Up to the 2.2 Release, this module was close to 90% original Blender stock PLY import addon.
+ Up to the 3.0 Release, this module was close to 90% original Blender stock PLY import addon.
  With the changes introduced by Ms. Jarvis it no longer resembles the 2004 Python of that
  era, and the new functionality places it into a new weight class.  
  
@@ -27,7 +27,7 @@
 
 CHANGELOG
 
- v2.2 - The Jarvis Merge.  MASSIVE improvements.
+ v3.0 - The Jarvis Merge! Improved enough to justify a new version number.
         Now reads in header file and creates named attributes based on ply file header
 
  v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
@@ -151,7 +151,7 @@ class ObjectSpec:
             for i in self.specs
         }
 ###
-def read_header(filepath):
+def read_header(self, filepath):
     import re
 
     format = b''
@@ -316,23 +316,44 @@ def read_header(filepath):
             print("Invalid header ('end_header' line not found!)")
             return invalid_ply
   
-        # Case 1 - Only verts in file
-        if len(obj_spec.specs) < 2:
-            use_verts = True
-
-        # Case 2 - 
-        # Don't think this is needed anymore?
-       # if (obj_spec.specs[1].count == 0):
-          #  use_verts = True
-
+        use_faces = False
+      
+        print(f'Before Specs, Verts-> {self.use_verts}')
         # Debugging header info
         for spec in obj_spec.specs:
             if spec.name == b'vertex':
                 print(f'Vertices-> {spec.count}')
-            if spec.name == b'face':
+            if spec.name == b'face' and spec.count < 1:
                 print(f'Faces-> {spec.count}')
-                if spec.count == 0: #'element face 0' in file (JWF, we see you!)
-                    use_verts = True
+               # if spec.count < 1: #'element face 0' in file (JWF, we see you!)
+                self.use_verts = True
+                use_faces = False
+            # Triangle mesh as cloud        
+            if spec.name == b'face' and spec.count > 1 and self.use_verts == True:
+               # self.use_verts = True
+                use_faces = False
+            # Triangle mesh as triangles    
+            if spec.name == b'face' and spec.count > 1 and self.use_verts == False:
+                #self.use_verts = False
+                use_faces = True
+                
+        if use_faces:
+            self.use_verts = False
+        else:
+            self.use_verts = True
+        #for spec in obj_spec.specs:
+            #if spec.name == b'vertex' and self.use_verts == False:
+                #print(f'Vertices-> {spec.count}')
+                #self.use_verts = True
+            #if spec.name == b'face':
+                #print(f'Faces-> {spec.count}')
+                #if spec.count < 1: #'element face 0' in file (JWF, we see you!)
+                   # self.use_verts = True
+           # elif spec.name == b'face' and spec.count > 1 and self.use_verts == True:
+               # self.use_verts = True
+         #   elif spec.name != b'face' and self.use_verts == False:
+          #      self.use_verts = True
+        print(f'After Specs, Verts-> {self.use_verts}')   
         print(properties)  
         print("Header has been parsed.")
         print("Loading data...")
@@ -501,7 +522,6 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
 
         if colindices:
             vcol_lay = mesh.vertex_colors.new()
-
             for i, col in enumerate(vcol_lay.data):
                 col.color[0] = mesh_colors[i][0]
                 col.color[1] = mesh_colors[i][1]
@@ -672,7 +692,7 @@ def load_ply(self, filepath):
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
     
-    obj, obj_spec, properties, texture = read_header(filepath)
+    obj, obj_spec, properties, texture = read_header(self, filepath)
     
     if obj is None:
         print("Invalid file")
