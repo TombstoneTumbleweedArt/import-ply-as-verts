@@ -20,7 +20,7 @@
 
 bl_info = {
     "name": "Import PLY as Verts",
-    "author": "Michael A. Prostka, Katie Jarvis (after Merry, Barton, Montagne, and Rachinsky)",
+    "author": "Michael A. Prostka, Katherine Jarvis (after Merry, Barton, Montagne, and Rachinsky)",
     "version": (3, 0, 0),
     "blender": (3, 0, 0),
     "location": "File > Import/Export",
