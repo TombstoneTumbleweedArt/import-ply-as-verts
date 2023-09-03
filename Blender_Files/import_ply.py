@@ -46,7 +46,7 @@ CHANGELOG
 
 bl_info = {
     "name": "Import PLY as Verts",
-    "author": "Michael A Prostka, Katie Jarvis",
+    "author": "Michael A Prostka, Katherine Jarvis",
     "blender": (3, 1, 0),
     "location": "File > Import/Export",
     "description": "Import PLY data with Attributes",
@@ -215,7 +215,7 @@ def read_header(self, filepath):
                     custom_line_sep = b'\n'
                 else:
                     custom_line_sep = b"\n\r"
-        ######
+
 		# The Jarvis Parser™, Part 1
         # Detects ALL property entries in the Header and extracts the literal name(s)
 		         
@@ -235,7 +235,6 @@ def read_header(self, filepath):
             eraser=prog.findall(matches[it_ind])[0] #what we want to remove (everything but property name)
             
             properties[it_ind]=matches[it_ind].replace(eraser,b'').replace(b" ",b'') #reduce to just name of property and store in a list
-        #####
         
         # Work around binary file reading only accepting "\n" as line separator.
         # The below line causes pep8 code e731
@@ -318,42 +317,30 @@ def read_header(self, filepath):
   
         use_faces = False
       
-        print(f'Before Specs, Verts-> {self.use_verts}')
         # Debugging header info
+        # This convoluted bit of boolean karate was deemed necessary to detect if a user is
+        # attempting to load a point cloud as a triangle mesh, while also allowing triangle
+        # meshes to be loaded as either cloud or mesh.
         for spec in obj_spec.specs:
             if spec.name == b'vertex':
                 print(f'Vertices-> {spec.count}')
             if spec.name == b'face' and spec.count < 1:
                 print(f'Faces-> {spec.count}')
-               # if spec.count < 1: #'element face 0' in file (JWF, we see you!)
+               # 'element face 0' in file (JWF, we see you!)
                 self.use_verts = True
                 use_faces = False
             # Triangle mesh as cloud        
             if spec.name == b'face' and spec.count > 1 and self.use_verts == True:
-               # self.use_verts = True
                 use_faces = False
             # Triangle mesh as triangles    
             if spec.name == b'face' and spec.count > 1 and self.use_verts == False:
-                #self.use_verts = False
                 use_faces = True
                 
         if use_faces:
             self.use_verts = False
         else:
             self.use_verts = True
-        #for spec in obj_spec.specs:
-            #if spec.name == b'vertex' and self.use_verts == False:
-                #print(f'Vertices-> {spec.count}')
-                #self.use_verts = True
-            #if spec.name == b'face':
-                #print(f'Faces-> {spec.count}')
-                #if spec.count < 1: #'element face 0' in file (JWF, we see you!)
-                   # self.use_verts = True
-           # elif spec.name == b'face' and spec.count > 1 and self.use_verts == True:
-               # self.use_verts = True
-         #   elif spec.name != b'face' and self.use_verts == False:
-          #      self.use_verts = True
-        print(f'After Specs, Verts-> {self.use_verts}')   
+      
         print(properties)  
         print("Header has been parsed.")
         print("Loading data...")
@@ -379,7 +366,6 @@ def get_properties(properties, colindices, el):
     print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')    
     return not_standard, weirdind, colindices
     
-#def load_ply_mesh(self, filepath, ply_name):
 def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
     import bpy
     import numpy as np
@@ -430,6 +416,8 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
     mesh_uvs = []
     mesh_colors = []
 
+    # MP Note - Meshes still use the old style Face Corner -> Byte Color.
+    # Will eventually update this to the newer Vertex Color data type
     def add_face(vertices, indices, uvindices, colindices):
         mesh_faces.append(indices)
         if uvindices:
@@ -487,9 +475,7 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
                 add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
 
     mesh = bpy.data.meshes.new(name=ply_name)
-
     mesh.vertices.add(len(obj[b'vertex']))
-
     mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
 
     if b'edge' in obj:
@@ -588,9 +574,6 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
         #     mesh.materials.append(material)
         #     for face in mesh.uv_textures[0].data:
         #         face.image = image
-    
-   
-    
     return mesh
     
 def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
@@ -617,9 +600,7 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     mesh_colors = []
     verts = obj[b'vertex']
     num_props=np.size(verts[0])
-
-    #print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')
-
+    
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
     mesh.vertices.add(len(obj[b'vertex']))
