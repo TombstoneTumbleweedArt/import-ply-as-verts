@@ -67,9 +67,14 @@ class ElementSpec:
         self.properties = []
 
     def load(self, format, stream):
-        if format == b'ascii':
+        #import io
+        
+        #buffered_stream = io.BufferedReader(stream)
+        if format == b'ascii':    
             stream = stream.readline().split()
-        return [x.load(format, stream) for x in self.properties]
+        properties = self.properties
+        return [x.load(format, stream) for x in properties]
+        #return [x.load(format, stream) for x in self.properties]
 
     def index(self, name):
         for i, p in enumerate(self.properties):
@@ -151,7 +156,9 @@ class ObjectSpec:
             for i in self.specs
         }
 ###
+
 def read_header(self, filepath):
+    import bpy
     import re
 
     format = b''
@@ -183,14 +190,13 @@ def read_header(self, filepath):
     }
     obj_spec = ObjectSpec()
     invalid_ply = (None, None, None)
-
     with open(filepath, 'rb') as plyf:
         signature = plyf.peek(5)
 
         if not signature.startswith(b'ply') or not len(signature) >= 5:
             print("Signature line was invalid")
             return invalid_ply
-
+            
         custom_line_sep = None
         #  Allow for the following patterns:
         #              CRLF (MB3D)  LFCR (BTracer2)     Binary / ASCII LF only
@@ -673,11 +679,20 @@ def load_ply(self, filepath):
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
     
+    text_output = bpy.data.texts.new(f'IPAV: {ply_name}')
+  
     obj, obj_spec, properties, texture = read_header(self, filepath)
     
     if obj is None:
         print("Invalid file")
         return
+    
+    for spec in obj_spec.specs:
+        if spec.name == b'vertex':
+            text_output.write(f'Vertices-> {spec.count}')
+        if spec.name == b'face' and spec.count > 1:
+            text_output.write(f'\nFaces-> {spec.count}')
+    text_output.write(f'\nProperties: {", ".join(str(prop, "UTF-8") for prop in properties)}')
     
     if self.use_verts:
         print("Verts Only")
@@ -688,7 +703,8 @@ def load_ply(self, filepath):
  
     if not mesh:
         return {'CANCELLED'}
-
+    
+    text_output.write(f'\nImported: {ply_name} in {time.time() - t:.3f} sec')
     print("\nSuccessfully imported %r in %.3f sec" % (filepath, time.time() - t))
 
     return {'FINISHED'}
