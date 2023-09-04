@@ -55,8 +55,16 @@ if "bpy" in locals():
     if "import_ply" in locals():
         importlib.reload(import_ply)
 
-
 import bpy
+
+from bpy.types import (
+    Operator,
+    Panel,
+    PropertyGroup,
+)
+#from bpy.ops import (
+#    import_mesh
+#)
 from bpy.props import (
     CollectionProperty,
     StringProperty,
@@ -70,8 +78,7 @@ from bpy_extras.io_utils import (
     orientation_helper,
 )
 
-
-class ImportPLYv(bpy.types.Operator, ImportHelper):
+class ImportPLY(bpy.types.Operator, ImportHelper):
     """Load a PLY geometry file"""
     bl_idname = "import_mesh.ply"
     bl_label = "Import PLY as Verts"
@@ -99,7 +106,7 @@ class ImportPLYv(bpy.types.Operator, ImportHelper):
         from . import import_ply
 
         context.window.cursor_set('WAIT')
-
+        
         paths = [
             os.path.join(self.directory, name.name)
             for name in self.files
@@ -112,9 +119,9 @@ class ImportPLYv(bpy.types.Operator, ImportHelper):
             if self.use_verts:
                 print("Verts-> True")
             else:
-                print("Verts-> False")
+                print("Verts-> False")   
             import_ply.load(self, context, path)
-
+        self.report({'INFO'}, "Import PLY as Verts: Done.") 
         context.window.cursor_set('DEFAULT')
 
         return {'FINISHED'}
@@ -313,9 +320,30 @@ class PLY_PT_export_geometry(bpy.types.Panel):
         layout.prop(operator, "use_uv_coords")
         layout.prop(operator, "use_colors")
 
+#class ImportOperator(bpy.types.Operator):
+#    bl_idname = "wm.import_ply_as_verts"
+#    bl_label = "IPAV"
+    
+#    def execute(self, context):
+#        print("Tacp")
+#        return {'FINISHED'}
+    
+#class VIEW3D_PT_UI(bpy.types.Panel):
+    """Creates a Panel in the scene context of the properties editor"""
+
+#    bl_label = "Import PLY as Verts"
+#    bl_idname = "VIEW3D_PT_UI"
+#    bl_space_type = 'VIEW_3D'
+#    bl_region_type = 'UI'
+#    bl_category = 'IPAV'
+    
+#    def draw(self, context):
+#        layout = self.layout
+#        layout.operator(ImportOperator.bl_idname, text = 'IMPORT')
+        
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportPLYv.bl_idname, text="Stanford PLY as Verts")
+    self.layout.operator(ImportPLY.bl_idname, text="Stanford PLY as Verts")
 
 
 def menu_func_export(self, context):
@@ -323,12 +351,14 @@ def menu_func_export(self, context):
 
 
 classes = (
-    ImportPLYv,
+    ImportPLY,
     ExportPLY,
     PLY_PT_import_include,
     PLY_PT_export_include,
     PLY_PT_export_transform,
     PLY_PT_export_geometry,
+ #   ImportOperator,
+ #   VIEW3D_PT_UI,
 )
 
 
