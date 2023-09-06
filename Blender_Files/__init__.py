@@ -20,11 +20,13 @@
 
 bl_info = {
     "name": "Import PLY as Verts",
-    "author": "Michael A. Prostka, Katherine Jarvis (after Merry, Barton, Montagne, and Rachinsky)",
+    "author": "Michael A. Prostka, Katherine Jarvis" \
+    "(after Merry, Barton, Montagne, and Rachinsky)",
     "version": (3, 0, 0),
     "blender": (3, 0, 0),
     "location": "File > Import/Export",
-    "description": "Import-Export PLY data (as Mesh or Cloud) with custom Attributes.",
+    "description": "Import-Export PLY data" \
+    "(as Mesh or Cloud) with custom Attributes.",
     "category": "Import-Export",
 }
 
@@ -47,6 +49,7 @@ bl_info = {
     "category": "Import-Export",
 }
 '''
+import bpy
 
 if "bpy" in locals():
     import importlib
@@ -55,28 +58,26 @@ if "bpy" in locals():
     if "import_ply" in locals():
         importlib.reload(import_ply)
 
-import bpy
-
 from bpy.types import (
     Operator,
     Panel,
     PropertyGroup,
 )
-#from bpy.ops import (
-#    import_mesh
-#)
+
 from bpy.props import (
     CollectionProperty,
     StringProperty,
     BoolProperty,
     FloatProperty,
 )
+
 from bpy_extras.io_utils import (
     ImportHelper,
     ExportHelper,
     axis_conversion,
     orientation_helper,
 )
+
 
 class ImportPLY(bpy.types.Operator, ImportHelper):
     """Load a PLY geometry file"""
@@ -92,7 +93,8 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
     # use_verts checkbox
     use_verts: BoolProperty(
         name="Ignore Faces",
-        description="Import PLY model as Verts with Attributes (No Faces/Edges)",
+        description="Import PLY model as Verts with Attributes" \
+        "(No Faces/Edges)",
         default = True,
     )
 
@@ -106,7 +108,7 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
         from . import import_ply
 
         context.window.cursor_set('WAIT')
-        
+
         paths = [
             os.path.join(self.directory, name.name)
             for name in self.files
@@ -119,9 +121,9 @@ class ImportPLY(bpy.types.Operator, ImportHelper):
             if self.use_verts:
                 print("Verts-> True")
             else:
-                print("Verts-> False")   
+                print("Verts-> False")
             import_ply.load(self, context, path)
-        self.report({'INFO'}, "Import PLY as Verts: Done.") 
+        self.report({'INFO'}, "Import PLY as Verts: Done.")
         context.window.cursor_set('DEFAULT')
 
         return {'FINISHED'}
@@ -153,7 +155,6 @@ class PLY_PT_import_include(bpy.types.Panel):
         layout = self.layout
         layout.use_property_split = True
         layout.use_property_decorate = False
-       
         sfile = context.space_data
         operator = sfile.active_operator
 
@@ -164,8 +165,8 @@ class PLY_PT_import_include(bpy.types.Panel):
 class ExportPLY(bpy.types.Operator, ExportHelper):
     bl_idname = "export_mesh.ply"
     bl_label = "Export PLY"
-    bl_description = "Export as a Stanford PLY with normals, vertex colors and texture coordinates"
-
+    bl_description = "Export as a Stanford PLY with normals," \
+        "vertex colors and texture coordinates"
     filename_ext = ".ply"
     filter_glob: StringProperty(default="*.ply", options={'HIDDEN'})
 
@@ -320,27 +321,6 @@ class PLY_PT_export_geometry(bpy.types.Panel):
         layout.prop(operator, "use_uv_coords")
         layout.prop(operator, "use_colors")
 
-#class ImportOperator(bpy.types.Operator):
-#    bl_idname = "wm.import_ply_as_verts"
-#    bl_label = "IPAV"
-    
-#    def execute(self, context):
-#        print("Tacp")
-#        return {'FINISHED'}
-    
-#class VIEW3D_PT_UI(bpy.types.Panel):
-    """Creates a Panel in the scene context of the properties editor"""
-
-#    bl_label = "Import PLY as Verts"
-#    bl_idname = "VIEW3D_PT_UI"
-#    bl_space_type = 'VIEW_3D'
-#    bl_region_type = 'UI'
-#    bl_category = 'IPAV'
-    
-#    def draw(self, context):
-#        layout = self.layout
-#        layout.operator(ImportOperator.bl_idname, text = 'IMPORT')
-        
 
 def menu_func_import(self, context):
     self.layout.operator(ImportPLY.bl_idname, text="Stanford PLY as Verts")
@@ -357,8 +337,6 @@ classes = (
     PLY_PT_export_include,
     PLY_PT_export_transform,
     PLY_PT_export_geometry,
- #   ImportOperator,
- #   VIEW3D_PT_UI,
 )
 
 
