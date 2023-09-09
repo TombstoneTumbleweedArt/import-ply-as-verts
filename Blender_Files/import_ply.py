@@ -19,30 +19,34 @@
 # <pep8 compliant>
 '''
  Import PLY as Verts
- Up to the 3.0 Release, this module was close to 90% original Blender stock PLY import addon.
- With the changes introduced by Ms. Jarvis it no longer resembles the 2004 Python of that
- era, and the new functionality places it into a new weight class.  
- 
+ Up to the 3.0 Release, this module was close to 90% original Blender
+ stock PLY import addon. With the changes introduced by Ms. Jarvis
+ it no longer resembles the 2004 Python of that era, and the new
+ functionality places it into a new weight class.
+
  Still all love and respect to the original programmers. :)
 
 CHANGELOG
 
  v3.0 - The Jarvis Merge! Improved enough to justify a new version number.
-        Now reads in header file and creates named attributes based on ply file header
+        Now reads in header file and creates named attributes based on
+        ply file header.
 
- v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird ply file by only
-    extracting the named color data (rgb[a]) from colindices.
+ v2.1 - Refactored the Brad Patch to theoretically accept any sort of weird
+        ply file by only extracting the named color data (rgb[a]) from
+        colindices.
 
- v2.0 - Reintegrated the original importer and added Verts/Colors as load option.  Now correctly loads:
+ v2.0 - Reintegrated the original importer and added Verts/Colors as load
+        option. Now correctly loads:
 
-    MB3D BTracer Point Cloud PLY (v1.99 and earlier)
-    MB3D BTracer2 PLY (v1.99.12 and later)
-    JWF  Point Cloud (a few edge cases may remain, these will be patched as necessary)
-    Photogrammetry and other generic PLY containing at least vertex and color information
+        MB3D BTracer Point Cloud PLY (v1.99 and earlier)
+        MB3D BTracer2 PLY (v1.99.12 and later)
+        JWF  Point Cloud
+        Photogrammetry and other generic PLY containing at least vertex and
+        color data
 
- v1.01 - "The Brad Patch": Added additional if clause to allow for unorthodox JWF ply files that contain odd
-    data similar to pscale and intensity
-
+ v1.01 - "The Brad Patch": Added additional if clause to allow for unorthodox
+        JWF ply files that contain odd data similar to pscale and intensity
 
 bl_info = {
     "name": "Import PLY as Verts",
@@ -53,6 +57,7 @@ bl_info = {
     "category": "Import-Export",
 }
 '''
+
 
 class ElementSpec:
     __slots__ = (
@@ -67,20 +72,17 @@ class ElementSpec:
         self.properties = []
 
     def load(self, format, stream):
-        #import io
-        
-        #buffered_stream = io.BufferedReader(stream)
-        if format == b'ascii':    
+        if format == b'ascii':
             stream = stream.readline().split()
         properties = self.properties
         return [x.load(format, stream) for x in properties]
-        #return [x.load(format, stream) for x in self.properties]
 
     def index(self, name):
         for i, p in enumerate(self.properties):
             if p.name == name:
                 return i
         return -1
+
 
 class PropertySpec:
     __slots__ = (
@@ -102,9 +104,12 @@ class PropertySpec:
                 ans = []
                 for i in range(count):
                     s = stream[i]
-                    if not (len(s) >= 2 and s.startswith(b'"') and s.endswith(b'"')):
+                    if not (len(s) >= 2 and s.startswith(b'"') and
+                            s.endswith(b'"')):
                         print("Invalid string", s)
-                        print("Note: ply_import.py does not handle whitespace in strings")
+                        print(
+                            "Note: ply_import.py does not handle"
+                            "whitespace in strings")
                         return None
                     ans.append(s[1:-1])
                 stream[:count] = []
@@ -141,6 +146,7 @@ class PropertySpec:
         else:
             return self.read_format(format, 1, self.numeric_type, stream)[0]
 
+
 class ObjectSpec:
     __slots__ = ("specs",)
 
@@ -155,7 +161,7 @@ class ObjectSpec:
             ]
             for i in self.specs
         }
-###
+
 
 def read_header(self, filepath):
     import bpy
@@ -196,13 +202,13 @@ def read_header(self, filepath):
         if not signature.startswith(b'ply') or not len(signature) >= 5:
             print("Signature line was invalid")
             return invalid_ply
-            
+
         custom_line_sep = None
         #  Allow for the following patterns:
         #              CRLF (MB3D)  LFCR (BTracer2)     Binary / ASCII LF only
         #   ASCII      1310         1013                10
         #   Python     \r\n         \n\r                \n
-        
+
         # CRLF
         if signature[3] != ord(b'\n'):
             if signature[3] != ord(b'\r'):
@@ -215,35 +221,48 @@ def read_header(self, filepath):
 
         # The Others
         if signature[3] == ord(b'\n'):
-            if(custom_line_sep is None):
+            if custom_line_sep is None:
                 # If no \r (ie LF only) present, force one
                 if signature[4] != ord(b'\r'):
                     custom_line_sep = b'\n'
                 else:
                     custom_line_sep = b"\n\r"
 
-		# The Jarvis Parser™, Part 1
-        # Detects ALL property entries in the Header and extracts the literal name(s)
-		         
-        if custom_line_sep is None: # header split up by lines
-            lines=re.split(b'\n',signature)
+        # The Jarvis Parser™, Part 1
+        # Detects ALL property entries in the Header and
+        # extracts the literal name(s)
+
+        if custom_line_sep is None:  # header split up by lines
+            lines = re.split(b'\n', signature)
         else:
-            lines=x=re.split(custom_line_sep,signature)
-            
-        keys_glue=str(list(type_specs.keys())).replace(", ","|").replace("b'","").replace("'","") # turn into a binary regexp
-        
-        prog=re.compile(b'^property '+bytes(keys_glue,'utf-8')+ b'+ ')
-        #MP - added 'and not' clause to omit vertex index list
-        matches = [match for match in lines if match.startswith(b'property') and not match.startswith(b'property list')] #lines that start with word property
-        properties=[]
+            lines = x = re.split(custom_line_sep, signature)
+
+        # turn into a binary regexp
+        keys = list(type_specs.keys())
+        keys_str = str(keys)
+        keys_str = keys_str.replace(", ", "|")
+        keys_str = keys_str.replace("b'", "")
+        keys_glue = keys_str.replace("'", "")
+
+        prog = re.compile(b'^property ' + bytes(keys_glue, 'utf-8') + b'+ ')
+        # MP - added 'and not' clause to omit vertex index list
+        matches = [
+                match for match in lines if match.startswith(b'property')
+                and not match.startswith(b'property list')
+                ]
+        # lines that start with word property
+        properties = []
         for it_ind in range(len(matches)):
             properties.append([])
-            eraser=prog.findall(matches[it_ind])[0] #what we want to remove (everything but property name)
-            
-            properties[it_ind]=matches[it_ind].replace(eraser,b'').replace(b" ",b'') #reduce to just name of property and store in a list
-        
-        # Work around binary file reading only accepting "\n" as line separator.
-        # The below line causes pep8 code e731
+            eraser = prog.findall(matches[it_ind])[0]
+        # what we want to remove (everything but property name)
+            properties[it_ind] = matches[it_ind].replace(eraser, b'')
+            properties[it_ind] = properties[it_ind].replace(b" ", b'')
+        # reduce to just name of property and store in a list
+
+        # Work around binary file reading only accepting
+        # "\n" as line separator.
+        # The below line causes pep8 code e731 (Original Comment)
         plyf_header_line_iterator = lambda plyf: plyf
         if custom_line_sep is not None:
             def _plyf_header_line_iterator(plyf):
@@ -254,8 +273,9 @@ def read_header(self, filepath):
                     for line in buff[:-1]:
                         read_bytes += len(line) + len(custom_line_sep)
                         if line.startswith(b'end_header'):
-                            # Since reader code might (will) break iteration at this point,
-                            # we have to ensure file is read up to here, yield, amd return...
+                            # Since reader code might (will) break iteration
+                            # at this point, we have to ensure file is read
+                            # up to here, yield, amd return...
                             plyf.read(read_bytes)
                             yield line
                             return
@@ -302,7 +322,7 @@ def read_header(self, filepath):
                     return invalid_ply
                 del version_test
                 format = tokens[1]
-                
+
             elif tokens[0] == b'element':
                 if len(tokens) < 3:
                     print("Invalid element line")
@@ -314,69 +334,95 @@ def read_header(self, filepath):
                     print("Property without element")
                     return invalid_ply
                 if tokens[1] == b'list':
-                    obj_spec.specs[-1].properties.append(PropertySpec(tokens[4], type_specs[tokens[2]], type_specs[tokens[3]]))
+                    last_spec = obj_spec.specs[-1]
+                    property = PropertySpec(tokens[4],
+                                            type_specs[tokens[2]],
+                                            type_specs[tokens[3]]
+                                            )
+                    last_spec.properties.append(property)
                 else:
-                    obj_spec.specs[-1].properties.append(PropertySpec(tokens[2], None, type_specs[tokens[1]]))
+                    last_spec = obj_spec.specs[-1]
+                    property = PropertySpec(tokens[2],
+                                            None,
+                                            type_specs[tokens[1]]
+                                            )
+                    last_spec.properties.append(property)
+
         if not valid_header:
             print("Invalid header ('end_header' line not found!)")
             return invalid_ply
-  
+
         use_faces = False
-      
-        # Debugging header info
-        # This convoluted bit of boolean karate was deemed necessary to detect if a user is
-        # attempting to load a point cloud as a triangle mesh, while also allowing triangle
-        # meshes to be loaded as either cloud or mesh.
+
+        # HEADER INFO
+        # This convoluted bit of boolean karate was deemed necessary to
+        # detect if a user is attempting to load a point cloud as a
+        # triangle mesh, while also allowing triangle meshes to be loaded
+        # as either cloud or mesh.
         for spec in obj_spec.specs:
             if spec.name == b'vertex':
                 print(f'Vertices-> {spec.count}')
             if spec.name == b'face' and spec.count < 1:
                 print(f'Faces-> {spec.count}')
-               # 'element face 0' in file (JWF, we see you!)
+            # 'element face 0' in file (JWF, we see you!)
                 self.use_verts = True
                 use_faces = False
-            # Triangle mesh as cloud        
-            if spec.name == b'face' and spec.count > 1 and self.use_verts == True:
+            # Triangle mesh as cloud
+            if (spec.name == b'face' and
+                    spec.count > 1 and
+                    self.use_verts is True):
                 use_faces = False
-            # Triangle mesh as triangles    
-            if spec.name == b'face' and spec.count > 1 and self.use_verts == False:
+            # Triangle mesh as triangles
+            if (spec.name == b'face' and
+                    spec.count > 1 and
+                    self.use_verts is False):
                 use_faces = True
-                
+
         if use_faces:
             self.use_verts = False
         else:
             self.use_verts = True
-      
-        print(properties)  
+
+        print(properties)
         print("Header has been parsed.")
         print("Loading data...")
-       
+
         # BOTTLENECK #1 - raw data load needs massive optimization etc.
         obj = obj_spec.load(format_specs[format], plyf)
-                
+
     return obj, obj_spec, properties, texture
 
+
 def get_properties(properties, colindices, el):
-    stand_props=[b'x', b'y', b'z', b'red', b'green', b'blue', b'alpha'] # standard properties list
-    not_standard = list(set(properties) - set(stand_props)) # the result has to be a list of strings
-    weirdind=[]
-    if any(color in s.lower() for color in (b'red', b'green', b'blue', b'alpha') for s in properties):   
-        colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
-    elif any(color in s.lower() for color in (b'red', b'green', b'blue') for s in properties):    
+    stand_props = [b'x', b'y', b'z', b'red', b'green', b'blue', b'alpha']
+    # standard properties list
+    not_standard = list(set(properties) - set(stand_props))
+    # the result has to be a list of strings
+    weirdind = []
+    rgb = (b'red', b'green', b'blue')
+    rgba = (b'red', b'green', b'blue', b'alpha')
+    if any(color in s.lower() for color in (rgba)
+            for s in properties):
+        colindices = (el.index(b'red'), el.index(b'green'),
+                      el.index(b'blue'), el.index(b'alpha'))
+    elif any(color in s.lower() for color in (rgb)
+             for s in properties):
         colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
-    
+
     if not_standard:
         for loop_ind in range(len(not_standard)):
-            weirdind.append(el.index(not_standard[loop_ind])) # gives us locations of other attributes within the list
+            weirdind.append(el.index(not_standard[loop_ind]))
+    # gives us locations of other attributes within the list
 
-    print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')    
+    print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')
     return not_standard, weirdind, colindices
-    
+
+
 def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
     import bpy
     import numpy as np
     print("Building mesh...")
-   
+
     # XXX28: use texture
     uvindices = colindices = None
     colmultiply = None
@@ -387,30 +433,37 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
 
     for el in obj_spec.specs:
         if el.name == b'vertex':
-            weirdind=[] #create weirdind list, with length of zero
-            vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
+            weirdind = []  # create weirdind list, with length of zero
+            vindices_x = el.index(b'x')
+            vindices_y = el.index(b'y')
+            vindices_z = el.index(b'z')
             # noindices = (el.index('nx'), el.index('ny'), el.index('nz'))
             # if -1 in noindices: noindices = None
             uvindices = (el.index(b's'), el.index(b't'))
             if -1 in uvindices:
                 uvindices = None
-            
+
     # The Jarvis Parser™, Part 2
-            if len(properties)>3: # more than just x, y, and z
-                not_standard, weirdind, colindices = get_properties(properties, colindices, el)            
+            if len(properties) > 3:  # more than just x, y, and z
+                not_standard, weirdind, colindices = get_properties(
+                    properties, colindices, el)
             # ignore alpha if not present
             if el.index(b'alpha') == -1:
-                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue')
+                colindices = (el.index(b'red'), el.index(b'green'),
+                              el.index(b'blue'))
             else:
-                colindices = el.index(b'red'), el.index(b'green'), el.index(b'blue'), el.index(b'alpha')
-            print(colindices)
+                colindices = (el.index(b'red'), el.index(b'green'),
+                              el.index(b'blue'), el.index(b'alpha'))
             if -1 in colindices:
                 if any(idx > -1 for idx in colindices):
-                    print("Warning: At least one obligatory color channel is missing, ignoring vertex colors.")
+                    print("Warning: At least one obligatory color channel is"
+                          "missing, ignoring vertex colors.")
                 colindices = None
             else:  # if not a float assume uchar
-                colmultiply = [1.0 if el.properties[i].numeric_type in {'f', 'd'} else (1.0 / 255.0) for i in colindices]
-                
+                colmultiply = [
+                    1.0 if el.properties[i].numeric_type in {'f', 'd'}
+                    else (1.0 / 255.0) for i in colindices
+                ]
         elif el.name == b'face':
             findex = el.index(b'vertex_indices')
         elif el.name == b'tristrips':
@@ -427,7 +480,10 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
     def add_face(vertices, indices, uvindices, colindices):
         mesh_faces.append(indices)
         if uvindices:
-            mesh_uvs.extend([(vertices[index][uvindices[0]], vertices[index][uvindices[1]]) for index in indices])
+            mesh_uvs.extend([
+                (vertices[index][uvindices[0]], vertices[index][uvindices[1]])
+                for index in indices
+            ])
         if colindices:
             if len(colindices) == 3:
                 mesh_colors.extend([
@@ -467,7 +523,7 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
 
     verts = obj[b'vertex']
     num_props = np.size(verts[0])
-    
+
     if b'face' in obj:
         for f in obj[b'face']:
             ind = f[findex]
@@ -478,15 +534,27 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
             ind = t[trindex]
             len_ind = len(ind)
             for j in range(len_ind - 2):
-                add_face(verts, (ind[j], ind[j + 1], ind[j + 2]), uvindices, colindices)
-
+                add_face(
+                    verts,
+                    (ind[j], ind[j + 1], ind[j + 2]),
+                    uvindices,
+                    colindices
+                )
     mesh = bpy.data.meshes.new(name=ply_name)
     mesh.vertices.add(len(obj[b'vertex']))
-    mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
-
+    mesh.vertices.foreach_set(
+        "co",
+        [a for v in obj[b'vertex'] for a in (
+            v[vindices_x],
+            v[vindices_y],
+            v[vindices_z])]
+    )
     if b'edge' in obj:
         mesh.edges.add(len(obj[b'edge']))
-        mesh.edges.foreach_set("vertices", [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])])
+        mesh.edges.foreach_set(
+            "vertices",
+            [a for e in obj[b'edge'] for a in (e[eindex1], e[eindex2])]
+        )
 
     if mesh_faces:
         loops_vert_idx = []
@@ -519,33 +587,41 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
                 col.color[1] = mesh_colors[i][1]
                 col.color[2] = mesh_colors[i][2]
                 col.color[3] = mesh_colors[i][3]
-    
-     # Create our new object here    
+
+    # Create our new object here
     for ob in bpy.context.selected_objects:
         ob.select_set(False)
     obj = bpy.data.objects.new(ply_name, mesh)
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
-    numverts=np.size(verts,0)
+    numverts = np.size(verts, 0)
     print("Mesh Built")
-    
+
     # The Jarvis Parser™, Part 3a Triangle Mesh with Attributes
-   
-    newattribute = bpy.context.active_object.data # renamed from newcolor
+
+    newattribute = bpy.context.active_object.data  # renamed from newcolor
     color_indices = colindices
-    if weirdind: #create custom variable names
+    if weirdind:  # create custom variable names
         for j, item in enumerate(weirdind):
-            newattribute.attributes.new(name=str(not_standard[j], 'utf-8'), type='FLOAT', domain='POINT')
+            newattribute.attributes.new(
+                name=str(not_standard[j], 'utf-8'),
+                type='FLOAT',
+                domain='POINT'
+            )
     if colindices and weirdind:
-        for i in range(numverts):    
-            for j in range(len(weirdind)):
-                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])           
-    elif weirdind: # no colors but still custom attributes
         for i in range(numverts):
             for j in range(len(weirdind)):
-                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])        
-                    
+                newattribute.attributes[
+                    str(not_standard[j], 'utf-8')
+                ].data[i].value = (verts[i][weirdind[j]])
+    elif weirdind:  # no colors but still custom attributes
+        for i in range(numverts):
+            for j in range(len(weirdind)):
+                newattribute.attributes[
+                    str(not_standard[j], 'utf-8')
+                ].data[i].value = (verts[i][weirdind[j]])
+
     mesh.update()
     mesh.validate()
 
@@ -563,7 +639,8 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
         # encoding = sys.getfilesystemencoding()
         # encoded_texture = texture.decode(encoding=encoding)
         # name = bpy.path.display_name_from_filepath(texture)
-        # image = load_image(encoded_texture, os.path.dirname(filepath), recursive=True, place_holder=True)
+        # image = load_image(encoded_texture, os.path.dirname(filepath),
+        #           recursive=True, place_holder=True)
 
         # if image:
         #     texture = bpy.data.textures.new(name=name, type='IMAGE')
@@ -581,27 +658,30 @@ def load_ply_mesh(obj_spec, obj, texture, properties, ply_name):
         #     for face in mesh.uv_textures[0].data:
         #         face.image = image
     return mesh
-    
+
+
 def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     import bpy
     import numpy as np
 
     uvindices = colindices = None
     colmultiply = None
-   
-    # Parse the data 
+
+    # Parse the data
     for el in obj_spec.specs:
         if el.name == b'vertex':
-            weirdind=[] #create weirdind list, with length of zero
-            vindices_x, vindices_y, vindices_z = el.index(b'x'), el.index(b'y'), el.index(b'z')
+            weirdind = [] #create weirdind list, with length of zero
+            vindices_x = el.index(b'x')
+            vindices_y = el.index(b'y')
+            vindices_z = el.index(b'z')
             uvindices = (el.index(b's'), el.index(b't'))
             if -1 in uvindices:
                 uvindices = None
             
             # The Jarvis Parser™, Part 2
-            if len(properties)>3: # more than just x, y, and z
-                not_standard, weirdind, colindices = get_properties(properties, colindices, el)
-               
+            if len(properties) > 3:  # more than just x, y, and z
+                not_standard, weirdind, colindices = get_properties(
+                    properties, colindices, el)
     mesh_uvs = []
     mesh_colors = []
     verts = obj[b'vertex']
@@ -610,8 +690,13 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
     mesh.vertices.add(len(obj[b'vertex']))
-    mesh.vertices.foreach_set("co", [a for v in obj[b'vertex'] for a in (v[vindices_x], v[vindices_y], v[vindices_z])])
-
+    mesh.vertices.foreach_set(
+        "co",
+        [a for v in obj[b'vertex'] for a in (
+            v[vindices_x],
+            v[vindices_y],
+            v[vindices_z])]
+    )
     # Create our new object here
     for ob in bpy.context.selected_objects:
         ob.select_set(False)
@@ -620,33 +705,18 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     numverts=np.size(verts,0)
-    
-    # COLOR
-    # If colors are found, create a new Attribute 'Col' to hold them (NOT the Vertex_Color block!)
-    # TODO: Make this more Pythonic
-   # if colindices:
-   #     bpy.context.active_object.data.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')
-   #     newcolor = bpy.context.active_object.data
-   #     for i, col in enumerate(verts):
-    #        if (len(colindices) <= 3):
-   #             newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
-    #            newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
-    #            newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
-    #        else:
-    #            newcolor.attributes['Col'].data[i].color[0] = (verts[i][colindices[0]]) / 255.0
-     #           newcolor.attributes['Col'].data[i].color[1] = (verts[i][colindices[1]]) / 255.0
-    #            newcolor.attributes['Col'].data[i].color[2] = (verts[i][colindices[2]]) / 255.0
-     #           newcolor.attributes['Col'].data[i].color[3] = (verts[i][colindices[3]]) / 255.0
-    
-    ######
+
     # The Jarvis Parser™, Part 3b - Point Cloud with Attributes
-   
     newattribute = bpy.context.active_object.data # renamed from newcolor
     color_indices = colindices
-    
-    if weirdind: #create custom variable names
+    if weirdind:  # create custom variable names
         for j, item in enumerate(weirdind):
-            newattribute.attributes.new(name=str(not_standard[j], 'utf-8'), type='FLOAT', domain='POINT')
+            newattribute.attributes.new(
+                name=str(not_standard[j], 'utf-8'),
+                type='FLOAT',
+                domain='POINT'
+            )
+
     if colindices and weirdind:
         newattribute.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')  
         for i in range(numverts):    
