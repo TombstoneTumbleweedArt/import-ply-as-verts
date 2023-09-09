@@ -670,14 +670,14 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     # Parse the data
     for el in obj_spec.specs:
         if el.name == b'vertex':
-            weirdind = [] #create weirdind list, with length of zero
+            weirdind = []  # create weirdind list, with length of zero
             vindices_x = el.index(b'x')
             vindices_y = el.index(b'y')
             vindices_z = el.index(b'z')
             uvindices = (el.index(b's'), el.index(b't'))
             if -1 in uvindices:
                 uvindices = None
-            
+
             # The Jarvis Parser™, Part 2
             if len(properties) > 3:  # more than just x, y, and z
                 not_standard, weirdind, colindices = get_properties(
@@ -685,8 +685,8 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     mesh_uvs = []
     mesh_colors = []
     verts = obj[b'vertex']
-    num_props=np.size(verts[0])
-    
+    num_props = np.size(verts[0])
+
     # Copy the positions
     mesh = bpy.data.meshes.new(name=ply_name)
     mesh.vertices.add(len(obj[b'vertex']))
@@ -704,10 +704,10 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
-    numverts=np.size(verts,0)
+    numverts = np.size(verts, 0)
 
     # The Jarvis Parser™, Part 3b - Point Cloud with Attributes
-    newattribute = bpy.context.active_object.data # renamed from newcolor
+    newattribute = bpy.context.active_object.data  # renamed from newcolor
     color_indices = colindices
     if weirdind:  # create custom variable names
         for j, item in enumerate(weirdind):
@@ -718,20 +718,37 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
             )
 
     if colindices and weirdind:
-        newattribute.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')  
-        for i in range(numverts):    
-            newattribute.attributes['Col'].data[i].color = [(verts[i][colindex]) / 255.0 for colindex in colindices]
-            for j in range(len(weirdind)):
-                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])           
-    elif weirdind: # no colors but still custom attributes
+        newattribute.attributes.new(
+            name="Col",
+            type='FLOAT_COLOR',
+            domain='POINT'
+        )
+        for i in range(numverts):
+            newattribute.attributes['Col'].data[i].color = [
+                (verts[i][colindex]) / 255.0 for colindex in colindices
+            ]
+        for j in range(len(weirdind)):
+            newattribute.attributes[
+                str(not_standard[j], 'utf-8')
+            ].data[i].value = (verts[i][weirdind[j]])
+
+    elif weirdind:  # no colors but still custom attributes
         for i in range(numverts):
             for j in range(len(weirdind)):
-                    newattribute.attributes[str(not_standard[j],'utf-8')].data[i].value = (verts[i][weirdind[j]])        
-    elif colindices: #just colors, no custom attributes
-        newattribute.attributes.new(name="Col", type='FLOAT_COLOR', domain='POINT')      
-        for i in range(numverts):     
-            newattribute.attributes['Col'].data[i].color = [(verts[i][colindex]) / 255.0 for colindex in colindices]  
-              
+                newattribute.attributes[
+                    str(not_standard[j], 'utf-8')
+                ].data[i].value = (verts[i][weirdind[j]])
+    elif colindices:  # just colors, no custom attributes
+        newattribute.attributes.new(
+            name="Col",
+            type='FLOAT_COLOR',
+            domain='POINT'
+        )
+        for i in range(numverts):
+            newattribute.attributes['Col'].data[i].color = [
+                (verts[i][colindex]) / 255.0 for colindex in colindices
+            ]
+
     mesh.update()
     mesh.validate()
 
@@ -742,40 +759,44 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
     print("Vert Mesh built.")
     return mesh
 
+
 def load_ply(self, filepath):
     import time
     import bpy
 
     t = time.time()
     ply_name = bpy.path.display_name_from_filepath(filepath)
-    
+
     text_output = bpy.data.texts.new(f'IPAV: {ply_name}')
-  
+
     obj, obj_spec, properties, texture = read_header(self, filepath)
-    
+
     if obj is None:
         print("Invalid file")
         return
-    
+
     for spec in obj_spec.specs:
         if spec.name == b'vertex':
             text_output.write(f'Vertices-> {spec.count}')
         if spec.name == b'face' and spec.count > 1:
             text_output.write(f'\nFaces-> {spec.count}')
-    text_output.write(f'\nProperties: {", ".join(str(prop, "UTF-8") for prop in properties)}')
-    
+    text_output.write(
+        f'\nProperties: {", ".join(str(prop, "UTF-8") for prop in properties)}'
+    )
+
     if self.use_verts:
         print("Verts Only")
         mesh = load_ply_verts(obj_spec, obj, texture, properties, ply_name)
     else:
         print("Verts and Faces")
         mesh = load_ply_mesh(obj_spec, obj, texture, properties, ply_name)
- 
+
     if not mesh:
         return {'CANCELLED'}
-    
+
     text_output.write(f'\nImported: {ply_name} in {time.time() - t:.3f} sec')
-    print("\nSuccessfully imported %r in %.3f sec" % (filepath, time.time() - t))
+    print(
+        "\nSuccessfully imported %r in %.3f sec" % (filepath, time.time() - t))
 
     return {'FINISHED'}
 
