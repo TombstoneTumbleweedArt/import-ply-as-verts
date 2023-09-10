@@ -727,10 +727,10 @@ def load_ply_verts(obj_spec, obj, texture, properties, ply_name):
             newattribute.attributes['Col'].data[i].color = [
                 (verts[i][colindex]) / 255.0 for colindex in colindices
             ]
-        for j in range(len(weirdind)):
-            newattribute.attributes[
-                str(not_standard[j], 'utf-8')
-            ].data[i].value = (verts[i][weirdind[j]])
+            for j in range(len(weirdind)):
+                newattribute.attributes[
+                    str(not_standard[j], 'utf-8')
+                ].data[i].value = (verts[i][weirdind[j]])
 
     elif weirdind:  # no colors but still custom attributes
         for i in range(numverts):
