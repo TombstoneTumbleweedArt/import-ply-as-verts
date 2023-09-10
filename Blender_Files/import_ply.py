@@ -413,8 +413,7 @@ def get_properties(properties, colindices, el):
         for loop_ind in range(len(not_standard)):
             weirdind.append(el.index(not_standard[loop_ind]))
     # gives us locations of other attributes within the list
-
-    print(f'WeirdInd -> {weirdind} | NS -> {not_standard}')
+    # print(f'WeirdInd -> {sorted(weirdind)} | NS -> {sorted(not_standard)}')
     return not_standard, weirdind, colindices
 
 
@@ -774,7 +773,8 @@ def load_ply(self, filepath):
     if obj is None:
         print("Invalid file")
         return
-
+    text_output.write(f'\n*** File: {filepath} ***\n')
+    print(f'\n*** File: {filepath} ***')
     for spec in obj_spec.specs:
         if spec.name == b'vertex':
             text_output.write(f'Vertices-> {spec.count}')
@@ -783,9 +783,11 @@ def load_ply(self, filepath):
     text_output.write(
         f'\nProperties: {", ".join(str(prop, "UTF-8") for prop in properties)}'
     )
-
+    print(
+        f'\nProperties: {", ".join(str(prop, "UTF-8") for prop in properties)}'
+    )
     if self.use_verts:
-        print("Verts Only")
+        print("No Faces / Edges")
         mesh = load_ply_verts(obj_spec, obj, texture, properties, ply_name)
     else:
         print("Verts and Faces")
@@ -794,9 +796,8 @@ def load_ply(self, filepath):
     if not mesh:
         return {'CANCELLED'}
 
-    text_output.write(f'\nImported: {ply_name} in {time.time() - t:.3f} sec')
-    print(
-        "\nSuccessfully imported %r in %.3f sec" % (filepath, time.time() - t))
+    text_output.write(f'\nImported in {time.time() - t:.3f} sec')
+    print(f'\nImported in {time.time() - t:.3f} sec')
 
     return {'FINISHED'}
 
