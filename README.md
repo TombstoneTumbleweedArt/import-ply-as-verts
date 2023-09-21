@@ -1,7 +1,8 @@
 # import-ply-as-verts v2.1 &nbsp; &nbsp; &nbsp; &nbsp; [![Generic badge](https://img.shields.io/badge/Release-2.1-<COLOR>.svg)](https://shields.io/) &nbsp; &nbsp; &nbsp; &nbsp; ![Logo_Blender-Dark](https://user-images.githubusercontent.com/24717972/154959144-bd55fdc0-2ab9-43e4-8747-33c7465a9c8f.svg)    
 ## Blender 3.0 * / 3.1 Alpha (and later) New PLY Importer
 
-### NOTE: As of Blender 4.0 the original Python PLY import/export will be deprecated for the new C++ modules.
+## The 3.0 Release of the Addon is nearly complete :)
+#### NOTE: As of Blender 4.0 the original Python PLY import/export will be deprecated for the new C++ modules.
 However, due to recent code advancements by Ms. Katie Jarvis (to be merged asap) Blender's Python PLY i/o has gained a great deal more relevance in academia. A number of significant upgrades are in the works :)</i> 
 __________________________________
 <ul>
