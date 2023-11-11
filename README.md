@@ -2,7 +2,7 @@
 ## Blender Python PLY Import Addon
 
 ### Preamble
-As of Blender 4.0 the original Python PLY import/export will be deprecated for the new C++ modules.
+As of Blender 4.0 the original Python PLY import/export will be deprecated in favor of the new C++ modules.
 These modules are a great deal faster (at the moment) but nowhere near as source-friendly as Python. 
 Due to the flexible nature of the PLY format, compatibility with Blender has remained an issue. Our open-source
 Python Addon is currently the most compatible and flexible option for nonstandard models such as point clouds.
