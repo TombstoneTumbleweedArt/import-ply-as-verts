@@ -82,9 +82,22 @@ The Point Cloud Render mode in Cycles works beautifully well with these (thank y
  1. Download the `Import_PLY_as_Verts-3.zip` file from the repo.
  2. Unzip the file.
  3. Do <strong><i>NOT</i></strong> unzip the `PLY_As_Verts.zip` file.  That is the actual Addon.
- 4. (Optional) Read the Manual.  It's a good manual :)
+ 4. (Optional) Read the Manual.  <i>It's a good manual :)</i>
  5. Open Blender.  If using 3.6 or lower, disable the legacy PLY i/o modules:
- 6. Install the Addon. Make sure the checkbox is ticked.
+
+
+![image3](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/c279e483-afe3-4283-a4ec-e0ce2ecfb6a4)
+
+And if necessary, remove old versions of the addon:
+
+![Cap-0028](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/6bce4943-5493-4f9e-9658-80065c276b46)
+
+
+  
+ 6. Install the new Addon. Make sure the checkbox is ticked.
+
+![Cap-0031](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/76e678a3-5b17-455f-a043-b05d2bfbcea3)
+
   
  
 
@@ -99,14 +112,15 @@ The Point Cloud Render mode in Cycles works beautifully well with these (thank y
   Selecting <i>Stanford PLY as Verts</i> will bring up the Filebrowser as usual, with an additional checkbox:
   
 
-![File-04-Screenshot](https://user-images.githubusercontent.com/24717972/155117073-40b5fb08-35a9-4ca9-8b42-32438515e98c.jpg)
+![image6](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/2605253a-1cf8-49be-b6d6-c324ebaf2076)
+
 
 Several things may happen at this point:
   - A triangle/quad mesh file may be loaded as either point cloud (checkbox selected) or mesh (checkbox deselected).
   - A point cloud file may be loaded with the checkbox selected.
   - A point cloud file may be loaded with the checkbox deselected, and the autodetect routine will use the correct loading method.
     
-
+Once your model has loaded, a number of common use cases are included in the manual.
 
 
 # Python API
@@ -123,7 +137,7 @@ Several things may happen at this point:
    
    A call like 
     ` Dave = bpy.ops.import_mesh.ply(filepath="C:\\mb3d_mesh.ply")` 
-   is equivalent to using the stock importer and <i>shouldn't</i> break existing scripts.
+   is equivalent to using the legacy importer and <i>shouldn't</i> break existing scripts.
     
     
     
@@ -158,5 +172,5 @@ Several things may happen at this point:
   
  
 
-# Blog and References
-  <i>Under construction</i>
+# Blog and Ephemera
+  <a href="https://theplyguy.blogspot.com/">ThePLYGuy</a>
