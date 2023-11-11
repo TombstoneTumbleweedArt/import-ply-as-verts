@@ -22,7 +22,7 @@ __________________________________
  
 # Why
 
-- Attempting to import <i><strong>any</strong></i> of the below PLY files with the stock importer will fail:
+- Attempting to import certain PLY files with Blender's stock importer will fail:
   
    - Triangle/Quad Meshes with nonstandard file terminators <i>(BTracer2 PLY export)</i>
    
@@ -31,7 +31,7 @@ __________________________________
      - Mandelbulb3D BTracer Point Cloud <i>(v.1.99 and earlier)</i>
      - Mandelbulb3D BTracer2 PLY <i>(1.99.12 and later)</i>
      - J-Wildfire Point Cloud    <i>(Some incompatible edge cases may yet exist.  They will be patched as needed.</i>
-     - Photogrammetry scans  <i>(MeshLab,</i> et. al.<i>)</i>
+     - Photogrammetry scans  <i>(MeshLab, CloudCompare,</i> et. al.<i>)</i>
      - Practically any 'extra' value beyond location, vertex normal, and vertex color.
 
 
@@ -44,12 +44,10 @@ __________________________________
 
 Which has proven _most_ frustrating for several years now.
 
-> Prior to this, a good workaround was to process the point cloud in MeshLab.  I love MeshLab and use it often, but it is daunting at best.  Furthermore, despite it being capable of importing a much wider variety of nonstandard PLY, MeshLab still strips out 'extra' data if the model is reexported.  The <i>real</i> idea was to have native Blender import.
-> Recent functions added under the hood of the Realize Instances node suddenly dovetailed with a standalone instancing app I had been working on since 2017.  Realizing that six nodes can replace my entire program, I cheerfully abandoned it and put full effort into the importer.
+Prior to this, a fair workaround was to process the point cloud in MeshLab.  I love MeshLab and use it often. However, despite it being capable of importing a much wider variety of nonstandard PLY, MeshLab still strips out 'extra' data if the model is reexported. Ms. Katherine Jarvis of the <a href="https://hajim.rochester.edu/me/sites/sefkow/index.html">Triforce Institute for Multiphysics Modeling</a> needed to preserve additional simulation data.  Her generous contributions to the codebase in the form of the <strong>Jarvis Parser&#8482;</strong> addresses that issue by neatly converting said data into Blender Attributes.
+ 
 
-The combined result is a completely new workflow for the point cloud enthusiast.
-
-# Result
+# Results
 
 
 > <i>(Left to Right, Back Row First)</i>
@@ -62,15 +60,15 @@ The combined result is a completely new workflow for the point cloud enthusiast.
 
 ![The_Gang-Render](https://user-images.githubusercontent.com/24717972/154948015-238c3d0d-43e4-4b63-a316-4f4470ce172d.jpg)
 
-All the objects in this scene share a single Material of correctly imported vertex colors. The point clouds have a simple Geometry Node tree applied . <i>(Material and Nodetree included in the </i>Example.blend<i> file).</i>
+All the objects in this scene share a single Material of correctly imported vertex colors. The point clouds have a simple Geometry Node tree applied . 
 
 # Cycles Point Cloud Render
-The brand new Point Cloud Render mode in Cycles works beautifully well with these (thank you to <strong>Bone Studio</strong> and <strong>Daniel Leike</strong>).  A tutorial is available on <a href="https://www.youtube.com/watch?v=K5xH4T_qcec&t=1s">YouTube</a>, and our image was included in the <a href="https://wiki.blender.org/wiki/Reference/Release_Notes/3.1/Cycles">Blender 3.1 Release Notes - Cycles</a>
+The Point Cloud Render mode in Cycles works beautifully well with these (thank you to <strong>Bone Studio</strong> and <strong>Daniel Leike</strong>).  A tutorial is available on <a href="https://www.youtube.com/watch?v=K5xH4T_qcec&t=1s">YouTube</a>, and our image was included in the <a href="https://wiki.blender.org/wiki/Reference/Release_Notes/3.1/Cycles">Blender 3.1 Release Notes - Cycles</a>
 
 ![31-Notes](https://user-images.githubusercontent.com/24717972/158804408-633a6bcf-fe94-416a-8e21-751b29687b2f.png)
 
 # Compatibility
-
+  - Best results will be had with Blender 3.1 or later (4.0 is verified).
   - Mesh Import is verified for 3.0 (thanks to <strong>Carisma Alex</strong> for asking!) and works exactly like the process in <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>.  However, the Point Cloud object requires new functionality added in Blender 3.1 to correctly assign the colors.  Direct import results in a charcoal briquette with missing surface normals.  A workaround is to create the Point Cloud in 3.1 (with applied Geo Node Modifier), save as a .blend file or export to a modern format like .gltf, and open in 3.0.  A call to (Edit Mode) Mesh->Normals->Recalculate Outside is usually necessary.
 
 
