@@ -12,7 +12,7 @@ Python Addon is currently the most compatible and flexible option for nonstandar
 ### New to 3.0
 __________________________________
 <ul>
-  <li>Attributes. <strong>ALL</strong> data in the PLY file - vertex colors, normals, etc., is parsed into usable Blender Attributes.
+  <li><strong>Attributes.</strong> <strong><i>ALL</i></strong> data in the PLY file - vertex colors, normals, etc., is parsed into usable Blender Attributes.
   <li>Improved compatibility, especially with CloudCompare.</li>
   <li>Improved performance (more to come).</li>
   <li>The program is now an actual Addon and not the kludgey install hack from previous versions :) </li>
