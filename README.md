@@ -79,26 +79,18 @@ The Point Cloud Render mode in Cycles works beautifully well with these (thank y
 
 # Install
 
-  Since these are Scripts and not an Addon, the `__init__.py` and `import_ply.py` files from the repo will need to be manually pasted alongside the stock importer files.
+ 1. Download the `Import_PLY_as_Verts-3.zip` file from the repo.
+ 2. Unzip the file.
+ 3. Do <strong><i>NOT</i></strong> unzip the `PLY_As_Verts.zip` file.  That is the actual Addon.
+ 4. (Optional) Read the Manual.  It's a good manual :)
+ 5. Open Blender.  If using 3.6 or lower, disable the legacy PLY i/o modules:
+ 6. Install the Addon. Make sure the checkbox is ticked.
   
-  1. Open Blender's location on your computer.  On Windows this is generally <i>'C:\Program Files\Blender Foundation\'</i>
-  2. If multiple version numbers are present, open the folder of the version you want to upgrade (for our example here, <i>'Blender 3.1'</i>)
-  3. Open the <i>'3.1'</i> folder 
-  4. Open the <i>'scripts'</i> folder
-  5. Open the <i>'addons'</i> folder
-  6. Open the <i>'io_mesh_ply'</i> folder
-  7. Rename `'__init__.py'` to something like `'__init__-OLD.py'`
-  8. Remame `'import_ply.py'` to something like `'import_ply-OLD.py'`
-  9. Paste in the new `__init__.py` and `import_ply.py` from the repository
-  10. Restart Blender
-   
- <strong>This will need to be done once for each version of Blender you would like to use the script with</strong>. If you want to revert to the original script, reverse steps 7 and 8.
-    
- The install procedure is also contained in `Install-v2.pdf` and <a href='https://youtu.be/UvC1IPhKNZU'>How to Install v2.0</a>.   
+ 
 
 # Usage
 
-Once the scripts are replaced, <i>File->Import</i> will now look like this:
+<i>File->Import</i> will now look like this:
 
 
 ![File_Screenshot](https://user-images.githubusercontent.com/24717972/154866087-3e15bcbc-8537-444c-af1d-4d41c4f25a36.jpg)
@@ -113,21 +105,8 @@ Several things may happen at this point:
   - A triangle/quad mesh file may be loaded as either point cloud (checkbox selected) or mesh (checkbox deselected).
   - A point cloud file may be loaded with the checkbox selected.
   - A point cloud file may be loaded with the checkbox deselected, and the autodetect routine will use the correct loading method.
-    - <i>Known Issue:- a bug in the autodetect slows performance as it causes the file to be read twice.  Currently working on a fix.</i>
+    
 
-
-# Performance
-Importing a mesh is the heaviest operation, as importing the same file as verts is about 60% faster.  This is due to the triangle-building algorithm from the stock importer.  Improvements can be made here!
-
-![Chart-03-SM](https://user-images.githubusercontent.com/24717972/163175009-83fa5c80-f3d1-4889-be28-c7af03cc61f7.jpg)
-
-*Stock time is listed only for reference - it's faster because it bails out and produces an unusable model.
-
-# Known Issues
-
-   - The autodetect bug mentioned above.
-   - The checkbox occasionally remains checked despite being False under the hood.  This is under investigation. 
-   
 
 
 # Python API
@@ -172,14 +151,11 @@ Importing a mesh is the heaviest operation, as importing the same file as verts 
     
 # Tutorials
   
-  1. <a href='https://youtu.be/UvC1IPhKNZU'>How to Install v2.0</a>
-  2. <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>
-  3. <i>Mandelbulb3D - BTracer2 Workflow Advanced</i>
-  4. <i>J-Wildfire</i>
-  5. <i>Photogrammetry Rescue with MeshLab and VisualSFM</i>
-  6. <a href="https://youtu.be/K5xH4T_qcec">Cycles 3.1 Point Cloud Render</a>
-  7. <a href="https://youtu.be/6iqVv8Xii-w">World Blender Meetup Day 2022 Presentation</a>
-  8. <i>...</i>
+## Note: These are a bit dated but essentially the same.  Newer videos are in the works.
+  1. <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>
+  2. <a href="https://youtu.be/K5xH4T_qcec">Cycles 3.1 Point Cloud Render</a>
+  3. <a href="https://youtu.be/6iqVv8Xii-w">World Blender Meetup Day 2022 Presentation</a>
+  
  
 
 # Blog and References
