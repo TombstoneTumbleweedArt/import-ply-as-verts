@@ -7,7 +7,7 @@ These modules are a great deal faster (at the moment) but nowhere near as source
 Due to the flexible nature of the PLY format, compatibility with Blender has remained an issue. Our open-source
 Python Addon is currently the most compatible and flexible option for nonstandard models such as point clouds.
 
-#### Thanks to Ms. Katherine Jarvis for the Attribute Parser! Your Python Karate is strong.
+### Thanks to Ms. Katherine Jarvis.
 
 ### New to 3.0
 __________________________________
@@ -30,22 +30,32 @@ __________________________________
     
      - Mandelbulb3D BTracer Point Cloud <i>(v.1.99 and earlier)</i>
      - Mandelbulb3D BTracer2 PLY <i>(1.99.12 and later)</i>
-     - J-Wildfire Point Cloud    <i>(Some incompatible edge cases may yet exist.  They will be patched as needed.</i>
+     - J-Wildfire Point Cloud 
      - Photogrammetry scans  <i>(MeshLab, CloudCompare,</i> et. al.<i>)</i>
-     - Practically any 'extra' value beyond location, vertex normal, and vertex color.
+     - Practically any 'extra' value beyond xyz, vertex normal, and vertex color.
 
 
- The result in Blender is the system console window error message "Invalid header, etc...", or no error at all.    
+ The result in Blender a system console window error message or no error at all.    
 
 
+> Legacy Python error message, Blender 3.6 and earlier:
 
    ![Error-Message](https://user-images.githubusercontent.com/24717972/154848070-c59145aa-8d9e-4000-8de8-077cd3ad11f1.jpg)
 
 
-Which has proven _most_ frustrating for several years now.
+> C++ Import error message, Blender 3.6 and higher:
 
-Prior to this, a fair workaround was to process the point cloud in MeshLab.  I love MeshLab and use it often. However, despite it being capable of importing a much wider variety of nonstandard PLY, MeshLab still strips out 'extra' data if the model is reexported. Ms. Katherine Jarvis of the <a href="https://hajim.rochester.edu/me/sites/sefkow/index.html">Triforce Institute for Multiphysics Modeling</a> needed to preserve additional simulation data.  Her generous contributions to the codebase in the form of the <strong>Jarvis Parser&#8482;</strong> addresses that issue by neatly converting said data into Blender Attributes.
- 
+![image](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/de1c4ed7-c24b-493f-b459-2a5483934d63)
+
+
+
+
+Prior to this, a fair workaround was to process the point cloud in MeshLab.  I love MeshLab and use it often. However, despite it being capable of importing a much wider variety of nonstandard PLY, MeshLab still strips out 'extra' data if the model is reexported. 
+
+Ms. Katherine Jarvis of the <a href="https://hajim.rochester.edu/me/sites/sefkow/index.html">Triforce Institute for Multiphysics Modeling</a> needed to preserve additional simulation data.  Her generous contributions to the codebase in the form of the <strong>Jarvis Parser&#8482; *</strong> addresses that issue by neatly converting said data into Blender Attributes.
+
+> *(Not actually trademarked, but innovative enough I feel she deserves one :).
+
 
 # Results
 
@@ -68,6 +78,7 @@ The Point Cloud Render mode in Cycles works beautifully well with these (thank y
 ![31-Notes](https://user-images.githubusercontent.com/24717972/158804408-633a6bcf-fe94-416a-8e21-751b29687b2f.png)
 
 # Compatibility
+  - If your PLY won't work, contact me and we'll figure out why.
   - Best results will be had with Blender 3.1 or later (4.0 is verified).
   - Mesh Import is verified for 3.0 (thanks to <strong>Carisma Alex</strong> for asking!) and works exactly like the process in <a href="https://youtu.be/4u-kS9IeTc4">Mandelbulb3D - BTracer2 Workflow Basic</a>.  However, the Point Cloud object requires new functionality added in Blender 3.1 to correctly assign the colors.  Direct import results in a charcoal briquette with missing surface normals.  A workaround is to create the Point Cloud in 3.1 (with applied Geo Node Modifier), save as a .blend file or export to a modern format like .gltf, and open in 3.0.  A call to (Edit Mode) Mesh->Normals->Recalculate Outside is usually necessary.
 
@@ -77,7 +88,7 @@ The Point Cloud Render mode in Cycles works beautifully well with these (thank y
 
 
 
-# Install
+# Installation
 
  1. Download the `Import_PLY_as_Verts-3.zip` file from the repo.
  2. Unzip the file.
@@ -88,7 +99,7 @@ The Point Cloud Render mode in Cycles works beautifully well with these (thank y
 
 ![image3](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/c279e483-afe3-4283-a4ec-e0ce2ecfb6a4)
 
-And if necessary, remove old versions of the addon:
+And if necessary, remove old versions of the Addon:
 
 ![Cap-0028](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/6bce4943-5493-4f9e-9658-80065c276b46)
 
