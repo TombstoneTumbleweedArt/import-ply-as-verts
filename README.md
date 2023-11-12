@@ -131,7 +131,18 @@ Several things may happen at this point:
   - A point cloud file may be loaded with the checkbox selected.
   - A point cloud file may be loaded with the checkbox deselected, and the autodetect routine will use the correct loading method.
     
-Once your model has loaded, a number of common use cases are included in the manual.
+
+As your model is importing, statistics about it will be sent to Blender's <strong>Console Window.</strong>
+
+![Cap-0035](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/649ed6ea-56a9-4b2d-a821-c45a5eff2eff)
+
+
+However, said <strong>Console Window</strong> is not trivial to get to for non-Windows users.
+
+As a remedy the Addon generates a text file inside of Blender's <strong>Text Editor.</strong>
+
+![Cap-0036](https://github.com/TombstoneTumbleweedArt/import-ply-as-verts/assets/24717972/74568daa-8bd5-4126-91a6-e057e9e0c1fe)
+
 
 
 # Python API
