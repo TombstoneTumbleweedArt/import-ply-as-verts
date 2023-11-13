@@ -7,7 +7,7 @@ These modules are a great deal faster (at the moment) but nowhere near as source
 Due to the flexible nature of the PLY format, compatibility with Blender has remained an issue. Our open-source
 Python Addon is currently the most compatible and flexible option for nonstandard models such as point clouds.
 
-### Thanks to Ms. Katherine Jarvis!
+### Our thanks to Ms. Katherine Jarvis, a true Pythonista.
 
 ### New to 3.0
 __________________________________
