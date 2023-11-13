@@ -275,4 +275,8 @@ When it's done, drop a `Set Material` node right after `Realize Instances` and n
  
 
 # Blog and Ephemera
-  <a href="https://theplyguy.blogspot.com/">ThePLYGuy</a>
+  <a href="https://theplyguy.blogspot.com/">ThePLYGuy Blog</a>
+  
+  <a href="https://www.youtube.com/channel/UCO5O6Rh7vPvReCxiSGrU-FQ">Our YouTube Channel</a>
+  
+  <a href="https://blenderartists.org/t/blender-use-at-the-university-of-rochester-advancing-python-ply/1477882">BlenderArtists Article 8-13-2023</a>
